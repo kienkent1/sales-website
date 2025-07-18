@@ -1,0 +1,80 @@
+﻿@model IEnumerable<project.ViewModels.HangHoaVM>
+@{
+    var totalPages = (int)ViewData["TotalPages"];
+    var currentPage = (int)ViewData["CurrentPage"];
+
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    if (endPage - startPage < 4)
+    {
+        if (startPage == 1)
+        {
+            endPage = Math.Min(totalPages, startPage + 4);
+        }
+        else if (endPage == totalPages)
+        {
+            startPage = Math.Max(1, endPage - 4);
+        }
+    }
+}
+
+
+@if(totalPages > 1)
+{
+
+<div class="col-12">
+    <nav >
+        <ul class="pagination d-flex justify-content-center mt-5">
+            @* Nút Previous *@
+            @if (currentPage > 1)
+            {
+                <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" aria-label="Previous"><span aria-hidden="true">«</span></a>
+                </li>
+            }
+                @* Hiển thị nút về trang đầu tiên nếu cần *@
+                @if (startPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="1">Trang đầu</a>
+                    </li>
+                    @if (startPage > 2)
+                    {
+                        <li class="page-item disabled">
+                            <a class="page-link" >...</a>
+                        </li>
+                    }
+                }
+
+                @* Các nút số trang *@
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@i">@i</a>
+                    </li>
+                }
+
+                @* Hiển thị nút về trang cuối cùng nếu cần *@
+                @if (endPage < totalPages)
+                {
+                    @if (endPage < totalPages - 1)
+                    {
+                        <li class="page-item disabled"><a class="page-link">...</a></li>
+                    }
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@totalPages">Trang cuối</a>
+                    </li>
+                }
+
+            @* Nút Next *@
+            @if (currentPage < totalPages)
+            {
+                <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" aria-label="Next"><span aria-hidden="true">»</span></a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+}

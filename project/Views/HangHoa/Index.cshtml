@@ -1,0 +1,32 @@
+﻿@model IEnumerable<project.ViewModels.HangHoaVM>
+@{
+    ViewData["Title"] = "Shop";
+    Layout = "DSHangHoa"; 
+    
+}
+
+<!-- Single Page Header start -->
+@section Breadcrumb{
+    @await Html.PartialAsync("SinglePage")
+}
+
+<!-- Single Page Header End -->
+<!-- Fruits Shop Start-->
+<div class="container-fluid fruite py-5">
+    <div class="container py-5">
+        <h1 class="mb-4">Dâu shop</h1>
+
+        <div class="row g-4">
+            @await Html.PartialAsync("ProductItem", Model)
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                @await Html.PartialAsync("pagination", Model)
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- Fruits Shop End-->
+

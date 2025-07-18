@@ -1,0 +1,87 @@
+﻿@model project.ViewModels.RegisterVM
+@{
+    ViewData["Title"] = "Đăng Ký";
+}
+
+<div class="container-fluid pt-5 py-5">
+    <div class="container mt-5 py-5">
+        <h1 class="text-success mb-5 pt-4">Đăng ký</h1>
+        <form asp-action="DangKy" enctype="multipart/form-data">
+            <div class="col-md-12 d-flex flex-column justify-content-center">
+                <div class="  d-flex gap-3">
+                    @*-------------- Cột trái--------------- *@     
+                    <div class="col-md-6 ">
+
+                        @* Tên đăng nhập: *@
+                        <div class="form-item ">
+                            <label asp-for="@Model.MaKh" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.MaKh" class="form-control">
+                            <span asp-validation-for="@Model.MaKh" class="text-danger"></span>
+                        </div>
+
+                        @* Họ tên *@
+                        <div class="form-item">
+                            <label asp-for="@Model.HoTen" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.HoTen" type="text" class="form-control">
+                            <span asp-validation-for="@Model.HoTen" class="text-danger"></span>
+                        </div>
+                        @* Mật khẩu *@
+                        <div class="form-item">
+                            <label asp-for="@Model.MatKhau" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.MatKhau" type="text" class="form-control">
+                            <span asp-validation-for="@Model.MatKhau" class="text-danger"></span>
+                        </div>
+                        @* Giới tính *@
+                        <div class="form-check my-3">
+                            <input asp-for="@Model.GioiTinh" class="form-check-input">
+                            <label for="GioiTinh" class="form-check-label">Nam? </label>
+                        </div>
+
+                        @*-------------- Cột phải--------------- *@
+                        @* Ngày sinh *@
+                        <div class="form-item">
+                            <label asp-for="@Model.NgaySinh" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.NgaySinh" class="form-control">
+                            <span asp-validation-for="@Model.NgaySinh" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 ">
+                        @* Địa chỉ *@
+                        <div class="form-item">
+                            <label asp-for="@Model.DiaChi" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.DiaChi" class="form-control">
+                            <span asp-validation-for="@Model.DiaChi" class="text-danger"></span>
+                        </div>
+                        @* Điện thoai   *@
+                        <div class="form-item">
+                            <label asp-for="@Model.DienThoai" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.DienThoai" class="form-control">
+                            <span asp-validation-for="@Model.DienThoai" class="text-danger"></span>
+                        </div>
+                        @* Email *@
+                        <div class="form-item">
+                            <label asp-for="@Model.Email" class="form-label my-3"></label><sup>*</sup>
+                            <input asp-for="@Model.Email" class="form-control">
+                            <span asp-validation-for="@Model.Email" class="text-danger"></span>
+                        </div>
+                        @* Avatar *@
+                        <div class="form-item">
+                            <label for="Hinh" class="form-label my-3">Avatar</label><sup>*</sup>
+                            <input type="file" name="Hinh" class="form-control">
+                        </div>
+                        <div class="pt-3">
+                            <a asp-action="DangNhap">Bạn đã có tài khoản?</a>
+                        </div>
+                    </div>
+                </div>
+                @* Submit btn *@
+                <div class="col-md-12 text-center">
+                    <div class="d-grid w-50 mx-auto">
+                        <button type="submit" class="btn btn-outline-success mt-4">Đăng ký</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

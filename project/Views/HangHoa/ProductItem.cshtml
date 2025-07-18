@@ -1,0 +1,32 @@
+﻿@model IEnumerable<project.ViewModels.HangHoaVM>
+
+
+
+@foreach (var item in Model)
+{
+        <div class="col-lg-3 col-md-6 d-flex">
+            <div class=" position-relative fruite-item h-100 d-flex flex-column  ">
+                <div class="fruite-img">
+                    <a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@item.MaHangHoa">
+                        <img src="~/Hinh/HangHoa/@item.HinhAnh" class="img-fluid w-100 rounded-top" alt="@item.TenHangHoa">
+                    </a>
+                </div>
+                <div class="text-white bg-secondary px-3 py-1 rounded border-0 position-absolute" style="top: 10px; left: 10px;">@item.TenLoai</div>
+                <div class="p-4   d-flex flex-column flex-grow-1">
+                    <a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@item.MaHangHoa">
+                        <h5>@item.TenHangHoa</h5>
+                    </a>
+                    <p class="flex-grow-1">@item.MoTa</p>
+                    <div class="d-flex justify-content-between flex-lg-wrap align-items-center">
+                        <p class="text-dark fs-6 fw-bold mb-2">$@item.DonGia / kg</p>
+                        <a asp-action="AddToCard" asp-controller="Card" asp-route-id="@item.MaHangHoa" class="fs-6  px-3 text-primary btn-link">
+                            <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ 
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+
+                    

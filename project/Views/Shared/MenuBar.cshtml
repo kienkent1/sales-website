@@ -1,0 +1,34 @@
+﻿@using System.Security.Claims
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div class="navbar-nav mx-auto ">
+    <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "") ">Home</a>
+    <a asp-controller="HangHoa" asp-action="Index" class="nav-item nav-link @(currentController == "HangHoa" && currentAction == "Index" ? "active" : "")">Shop</a>
+
+    <a asp-controller="Contact" asp-action="Index" class="nav-item nav-link @(currentController == "Contact" && currentAction == "Index" ? "active" : "")">Contact</a>
+
+    @if (User?.Identity?.IsAuthenticated == true)
+    {
+        @if (User.IsInRole("1"))
+        {
+            <div class="dropdown me-3  d-flex align-items-center ps-3">
+                <a class="dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false" href="#" role="button">Quản lý</a>
+            
+                <ul class="dropdown-menu dropdown-menu-end p-2">
+                    <li>
+                        <a asp-controller="HangHoa" asp-action="QuanLySanPham" class="nav-item nav-link @(currentController == "HangHoa" && currentAction == "QuanLySanPham" ? "active" : "")">Quản lý sản phẩm</a>
+                    </li>
+                    <li>
+                        <a asp-controller="HangHoa" asp-action="" class="nav-item nav-link @(currentController == "KhachHang" && currentAction == "" ? "active" : "")">Quản Lý Loại</a>
+                    </li>
+                    <li>
+                        <a asp-controller="HangHoa" asp-action="" class="nav-item nav-link @(currentController == "KhachHang" && currentAction == "" ? "active" : "")">Quản Lý Nhà cung cấp</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    }
+</div>

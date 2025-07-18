@@ -1,0 +1,45 @@
+﻿@model project.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container pt-5">
+    <div class="row justify-content-center pt-4">
+        <div class="col-md-8 col-lg-6 pt-5">
+
+            <h1 class="text-success mb-4 pt-4">Đăng nhập</h1>
+
+            <form asp-action="DangNhap" method="post">
+                <input type="hidden" name="ReturnUrl" value="@ViewBag.ReturnUrl" />
+
+                <div class="text-danger" asp-validation-summary="All"></div>
+                @* Tên đăng nhập *@
+                <div class="form-group mb-3">
+                    <!-- Dùng form-group và mb-3 để tạo khoảng cách -->
+                    <label asp-for="Username" class="form-label"></label><sup>*</sup>
+                    <input asp-for="Username" class="form-control" placeholder="Nhập tên đăng nhập của bạn">
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                @* Mật khẩu *@
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="form-label"></label><sup>*</sup>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu"> <!-- Đổi type="text" thành "password" -->
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                @* Nút Submit *@
+                <div class="d-grid mt-4">
+                    <!-- d-grid giúp button chiếm toàn bộ chiều rộng -->
+                    <button type="submit" class="btn btn-success">Đăng nhập</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-3">
+
+                <a asp-action="QuenMatKhau">Quên mật khẩu?</a> | <a asp-action="DangKy">Tạo tài khoản mới</a>
+            </div>
+
+        </div>
+    </div>
+</div>
