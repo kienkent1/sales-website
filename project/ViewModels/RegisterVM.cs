@@ -34,7 +34,7 @@ namespace project.ViewModels
 
         [Required(ErrorMessage = "Số điện thoại không được để trống")]
         [MaxLength(24, ErrorMessage = "Số điện thoại không được quá 24 ký tự")]
-        [RegularExpression(@"^(\+84|0)(\d{9,10})$", ErrorMessage = "Số điện thoại không hợp lệ")]
+        [RegularExpression(@"^(\+84|0)(\d{9,15})$", ErrorMessage = "Số điện thoại không hợp lệ")]
         [Display(Name = "Điện thoại")]
         public string DienThoai { get; set; }
 

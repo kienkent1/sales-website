@@ -29,6 +29,9 @@ namespace project.Helpers
            .ForMember(dest => dest.MaHangHoa, opt => opt.MapFrom(src => src.MaHh))
             .ForMember(dest => dest.Hinh, opt => opt.Ignore()) // Handle file upload separately
             .ForMember(dest => dest.HinhUrl, opt => opt.MapFrom(src => src.Hinh));
+
+            CreateMap<LoaiVM, Loai>();
+
         }
     }
     

@@ -5,12 +5,12 @@ namespace project.ViewModels
 {
     public class ProductVM
     {
-        
+
         public int MaHangHoa { get; set; }
 
         [MaxLength(50, ErrorMessage = "*Tên không được quá 50 ký tự")]
         [Required(ErrorMessage = "Tên hàng hóa không được để trống")]
-        public string TenHh { get; set; } 
+        public string TenHh { get; set; }
 
         public string? TenAlias { get; set; }
 
@@ -30,6 +30,7 @@ namespace project.ViewModels
         public IFormFile Hinh { get; set; }
 
         [Required(ErrorMessage = "Ngày sản xuất không được để trống")]
+        [DataType(DataType.Date)]
         public DateTime NgaySx { get; set; }
 
         [Required(ErrorMessage = "Giảm giá không được để trống")]
@@ -39,7 +40,7 @@ namespace project.ViewModels
 
         public int SoLanXem { get; set; }
 
-       
+
         public string? MoTa { get; set; }
 
         [MaxLength(50, ErrorMessage = "*Tên không được quá 50 ký tự")]
@@ -52,5 +53,9 @@ namespace project.ViewModels
 
         public string? TenLoai { get; set; }
         public string? TenCongTy { get; set; }
+        public ProductVM()
+        {
+            this.NgaySx = DateTime.Today;
+        }
     }
 }

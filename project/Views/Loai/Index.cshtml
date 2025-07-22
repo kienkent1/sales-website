@@ -1,0 +1,255 @@
+﻿@model project.ViewModels.LoaiVM
+@{
+    ViewData["Title"] = "Danh sách loại";
+    var Loais = ViewBag.Loai;
+}
+
+@section Styles {
+    <style>
+        #btn-Huy {
+            border: 1px solid gray !important;
+        }
+
+            #btn-Huy:hover {
+                background-color: gray !important;
+                color: white !important;
+            }
+
+        #btn-Luu:hover {
+            background-color: green !important;
+            color: white !important;
+        }
+
+        #btn-Xoa:hover {
+            background-color: red !important;
+            color: white !important;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
+}
+
+
+<div class="container contact py-5 ">
+    <div class="container py-5">
+        <div class="p-5 bg-light rounded">
+            <div class="row g-4">
+                <div class="col-md-12 ">
+                    <div class="text-center mx-auto mb-3" style="max-width: 700px;">
+                        <h1 class="text-primary">Quản lý Loại</h1>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <div class="col-md-5">
+                            <form id="LoaiForm" asp-controller="Loai" asp-action="AddOrEditLoai" method="post" enctype="multipart/form-data">
+                                <input type="hidden" asp-for="MaLoai" />
+                                <div class="col-md-12 d-flex flex-column justify-content-center">
+                                    <div class="  d-flex gap-3">
+
+                                        <div class="col-md-11 ">
+
+
+                                          
+                                            @if (ViewBag.SuccessMessage != null)
+                                            {
+                                                <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+                                            }
+                                            @if (ViewBag.ErrorMessage != null)
+                                            {
+                                                <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+                                            } 
+
+                                            @if (ViewBag.CountLoaisDeleted != null && (int)ViewBag.CountLoaisDeleted > 0)
+                                            {
+                                                <a asp-controller="Loai" asp-action="GabageLoai" class="text-danger"><i class="bi bi-trash3-fill"></i> Có (@ViewBag.CountLoaisDeleted) loại</a>
+                                            }
+
+                                            @* Tên loai : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập tên sản phẩm</label>
+                                                <input asp-for="@Model.TenLoai" class="form-control border-0 py-3" placeholder="Nhập  Tên hàng">
+                                                <span asp-validation-for="@Model.TenLoai" class="text-danger"></span>
+                                            </div>
+
+                                            @* hinh *@
+                                            <div class="form-item mb-4  ">
+                                                <label class="form-label my-3">Tải hình</label>
+                                                <img id="hinhPreview" src="" alt="Xem trước hình ảnh" class="img-fluid rounded mb-3 mt-2" style="max-width: 200px; display: none;" />
+                                                <div class="input-group">
+                                                    <input asp-for="Hinh" type="file" class="form-control" accept="image/*" aria-describedby="inputGroupFileAddon04" id="Hinh" aria-label="Upload">
+                                                </div>
+
+                                                <span asp-validation-for="@Model.Hinh" class="text-danger"></span>
+
+                                            </div>
+
+                                            @* mo ta *@
+                                            <div class="form-item mb-4">
+                                                <label class="form-label my-3">Nhập mô tả sản phẩm</label>
+                                                <textarea asp-for="@Model.MoTa" type="text" class="form-control border-0 py-3" rows="8" placeholder="Nhập  mô tả"></textarea>
+                                                <span asp-validation-for="@Model.MoTa" class="text-danger"></span>
+                                            </div>
+                                            <div class="d-flex gap-3">
+                                                <button class="w-75 btn form-control btn-outline-success py-3 bg-white text-primary " id="btn-Luu" type="submit"><i class="bi bi-floppy-fill"></i> Lưu</button>
+                                                <button onclick="SorftDelete()" class="w-75 btn form-control btn-outline-danger py-3 bg-white text-danger " id="btn-Xoa" type="button"><i class="bi bi-trash3-fill"></i> Xóa</button>
+                                                <button class="w-75 btn form-control  py-3 bg-white text-dark " id="btn-Huy" type="button" onclick="resetForm()"><i class="bi bi-x-circle"></i> Hủy </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-7">
+                            <form asp-action="Index" asp-controller="Loai">
+                                <div class="input-group mb-4">
+                                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query">
+                                    <button class="btn  btn-light border" type="submit">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Mã loại</th>
+                                        <th scope="col">Tên loại</th>
+                                        <th scope="col">Mô tả</th>
+                                        <th scope="col">Hình</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (TempData["Message"] != null)
+                                    {
+                                        <tr>
+                                            <td colspan="9" class="text-center text-danger">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                @TempData["Message"]
+                                            </td>
+
+                                        </tr>
+
+
+                                    }
+    
+                                   @foreach(var item in Loais)
+                                    {
+                                        <tr class="clickable-row" onclick="fillFormForEdit(@item.MaLoai)">
+                                            <td>@item.MaLoai</td>
+                                            <td>@item.TenLoai</td>
+                                            <td>@item.MoTa</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.Hinh))
+                                                {
+                                                    <img src="~/Hinh/Loai/@item.Hinh" width="60" class="img-thumbnail" />
+                                                }
+                                                </td>
+                                                </tr>
+                                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function (event) {
+            const hinhInput = document.getElementById('Hinh');
+            const hinhPreview = document.getElementById('hinhPreview');
+
+            hinhInput.addEventListener('change', function (event) {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    hinhPreview.style.display = 'block';
+
+                    reader.onload = function (e) {
+                        hinhPreview.setAttribute('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    hinhPreview.setAttribute("src", "");
+                    hinhPreview.style.display = 'none';
+                }
+            });
+        });
+
+
+        async function fillFormForEdit(loaiId) {
+            try {
+
+                const response = await fetch(`/Loai/GetLoai?id=${loaiId}`);
+
+                if (!response.ok) {
+                    resetForm();
+                    throw new Error(`Không tìm thấy loại hoặc có lỗi từ server. Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                document.getElementById('MaLoai').value = data.maLoai;
+                document.getElementById('TenLoai').value = data.tenLoai;
+                document.getElementById('MoTa').value = data.moTa;
+
+                const hinhPreview = document.getElementById('hinhPreview');
+
+                if (data.hinh) {
+                    hinhPreview.src = `/Hinh/Loai/${data.hinh}`;
+                    hinhPreview.style.display = 'block';
+                } else {
+                    hinhPreview.src = '';
+                    hinhPreview.style.display = 'none';
+                }
+
+                window.scrollTo(0, 0);
+
+            } catch (error) {
+                console.error('Đã xảy ra lỗi trong hàm fillFormForEdit:', error);
+                alert(error.message); 
+            }
+        }
+        async function SorftDelete() {
+            const LoaiId = document.getElementById('MaLoai').value;
+            if (confirm("Bạn có chắc chắn muốn xóa loại này?")) {
+                try {
+                         if (!LoaiId || LoaiId === "0") {
+            alert("Vui lòng chọn một sản phẩm từ danh sách trước khi xóa.");
+            return; // Dừng hàm lại
+        }
+                    const response = await fetch(`/Loai/SorftDeleteLoai?id=${LoaiId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Không thể xóa sản phẩm. Status: ${response.status}`);
+                    }
+                    // Xóa thành công, làm mới trang hoặc cập nhật giao diện
+                    alert("Sản phẩm đã được xóa thành công.");
+                    location.reload(); // Làm mới trang để cập nhật danh sách sản phẩm
+                } catch (error) {
+                    console.error('Đã xảy ra lỗi trong hàm SorftDelete:', error);
+                    alert(error.message); // Hiển thị thông báo lỗi cho người dùng
+                }
+            }
+        }
+        function resetForm() {
+            document.getElementById('LoaiForm').reset();
+            document.getElementById('MaLoai').value = "0";
+            document.getElementById('hinhPreview').style.display = 'none';
+            document.getElementById('hinhPreview').src = '';
+        }
+
+        
+    </script>
+}

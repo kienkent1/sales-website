@@ -1,12 +1,62 @@
-﻿
+﻿@model project.ViewModels.ChangePassword
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Đổi mật khẩu"; 
 }
 
-
-<div class=" container pt-5 mt-5">
-    <h1 class="mt-5">Profile</h1>
-    <h2>Welcome @Context.User.Identity.Name</h2>
-<a asp-action="DangXuat">Logout</a>
+<div class=" container pt-5">
+    <h1 class="mt-5">Trang cá nhân</h1>
+    <h2>Chào <b>@Context.User.Identity.Name</b> !</h2>
 </div>
 
+<div class="container mt-3">
+    <div class="row justify-content-center ">
+        <div class="col-md-8 col-lg-6 ">
+
+            <h1 class="text-success mb-4 pt-4">Đổi mật khẩu</h1>
+
+            <form asp-controller="KhachHang" asp-action="ChangePassword" method="post" id="ChangePassform">
+
+                <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+
+                @* Mật khẩu hien tai *@
+                <div class="form-group mb-3">
+                    <label asp-for="CurrentPassword" class="form-label"></label><sup>*</sup>
+                    <input asp-for="CurrentPassword" type="password" class="form-control" placeholder="Nhập mật khẩu hiện tại">
+                    <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                </div>
+
+                @* Mật khẩu moi *@
+                <div class="form-group mb-3">
+                    <label asp-for="NewPassword" class="form-label"></label><sup>*</sup>
+                    <input asp-for="NewPassword" type="password" class="form-control" placeholder="Ít nhất 5 ký tự">
+                    <span asp-validation-for="NewPassword" class="text-danger"></span>
+                </div>
+
+                @* xac nhan Mật khẩu *@
+                <div class="form-group mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label"></label><sup>*</sup>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu mới">
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                @* Nút Submit *@
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-success">Xác nhận</button>
+                    <button type="button" onclick="resetForm()" class="btn btn-light mt-3">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function resetForm() {
+            document.getElementById('ChangePassform').reset();
+            $('.text-danger').text('');
+        }
+    </script>
+}

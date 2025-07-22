@@ -1,0 +1,176 @@
+﻿
+@{
+    ViewData["Title"] = "Thùng rác loại hàng";
+    var loais = ViewBag.LoaisInGabge as IEnumerable<project.Data.Loai>;
+}
+
+
+@section Styles {
+    <style>
+
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
+
+}
+<div class="container mt-3">
+    <div class="col-md-11  ">
+        <div class="d-flex flex-column justify-content-center pt-5">
+            <div class="mb-4 mt-5">
+                <a asp-controller="loai" asp-action="Index" class="text-decoration-none ">
+                    <span class="p-3 text-success fs-5"><i class="bi bi-arrow-bar-left"></i> Quay lại</span>
+                </a>
+            </div>
+            <form asp-action="GabageLoai" asp-controller="Loai">
+                <div class="input-group mb-4 mt-3">
+                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query" value="@ViewBag.CurrentQuery">
+                    <button class="btn  btn-light border">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </form>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Mã loại</th>
+                        <th scope="col">Tên loại</th>
+                        <th scope="col">Mô tả</th>
+                        <th scope="col">Hình</th>
+                        <th scope="col">Thời gian xóa</th>
+                        <th>Chọn tất cả <input type="checkbox" name="name" value="true" id="CheckBoxAll" /></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (TempData["Message"] != null)
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-danger">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                @TempData["Message"]
+                            </td>
+
+                        </tr>
+
+
+                    }
+
+                    @if (loais != null)
+                    {
+                        @foreach (var item in loais)
+                        {
+
+                            <tr class="clickable-row">
+                                <th scope="row">@item.MaLoai</th>
+                                <td >@item.TenLoai</td>
+
+                                <td scope="col">@item.MoTa</td>
+                                <td>
+                                    <img src="~/Hinh/Loai/@item.Hinh" width="60" class="img-thumbnail" />
+                                </td>
+                                <td>@item.DeletedAt?.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td><input type="checkbox" name="name" value="@item.MaLoai" class="CheckBoxItem" /></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7">ko co loai</td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+            <div class="d-flex gap-3">
+                <button class="w-75 btn form-control btn-outline-success py-3 bg-white text-primary " id="btn-restore" type="button"><i class="bi bi-floppy-fill"></i> khôi phục</button>
+                <button class="w-75 btn form-control btn-outline-danger py-3 bg-white text-danger " id="btn-Xoa" type="button"><i class="bi bi-trash3-fill"></i> Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+
+             document.addEventListener('DOMContentLoaded', function () {
+
+            var checkBoxAll = document.getElementById("CheckBoxAll");
+            var checkBoxItems = document.querySelectorAll(".CheckBoxItem");
+            const soLuongCBItem = checkBoxItems.length;
+            const btnRestore = document.getElementById("btn-restore");
+
+            if (soLuongCBItem === 0) {
+                checkBoxAll.disabled = true;
+                 btnRestore.disabled = true;
+                return;
+            }
+
+            function updateSelectAllState() {
+                const countChecked = document.querySelectorAll('.CheckBoxItem:checked').length;
+
+
+                checkBoxAll.checked = (countChecked === soLuongCBItem);
+
+            }
+
+            // --- Sự kiện cho CheckBoxAll ---
+            checkBoxAll.addEventListener("change", function() {
+
+                checkBoxItems.forEach(function(item) {
+                    item.checked = checkBoxAll.checked;
+                });
+
+            });
+
+            // --- Sự kiện cho từng CheckBoxItem ---
+            checkBoxItems.forEach(function(item) {
+                item.addEventListener('change', function() {
+
+                    updateSelectAllState();
+                });
+            });
+                btnRestore.addEventListener('click', async function() {
+                    try{
+                 const checkedBoxes = document.querySelectorAll('.CheckBoxItem:checked');
+                const selectedIds = Array.from(checkedBoxes).map(function(checkbox) {
+                    return parseInt(checkbox.value, 10);
+                });
+
+               if(selectedIds.length === 0 ){
+                   alert("Vui lòng chọn ít nhất một sản phẩm để khôi phục.");
+                    return;
+                }
+                if (confirm("Bạn có chắc chắn muốn khôi phục các sản phẩm đã chọn?")) {
+                    const response= await fetch('/Loai/LoaiRestore',{
+                        method:'POST',
+                        headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(selectedIds)
+                    });
+                         if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+
+                        alert('Lỗi: ' + result.message);
+                    }
+                } else {
+
+                    throw new Error(`Không thể khôi phục sản phẩm. Lỗi máy chủ: ${response.status}`);
+                }
+            }
+        } catch (error) {
+
+            console.error('Đã xảy ra lỗi trong quá trình khôi phục:', error);
+            alert('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
+        }
+               });
+
+        });
+
+
+    </script>
+}

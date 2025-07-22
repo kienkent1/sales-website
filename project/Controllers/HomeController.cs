@@ -13,6 +13,7 @@ namespace project.Controllers
             _logger = logger;
         }
 
+        //[Route("/TrangChu")]
         public IActionResult Index()
         {
             return View();

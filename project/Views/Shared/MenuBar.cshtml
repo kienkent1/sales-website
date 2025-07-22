@@ -22,10 +22,10 @@
                         <a asp-controller="HangHoa" asp-action="QuanLySanPham" class="nav-item nav-link @(currentController == "HangHoa" && currentAction == "QuanLySanPham" ? "active" : "")">Quản lý sản phẩm</a>
                     </li>
                     <li>
-                        <a asp-controller="HangHoa" asp-action="" class="nav-item nav-link @(currentController == "KhachHang" && currentAction == "" ? "active" : "")">Quản Lý Loại</a>
+                        <a asp-controller="Loai" asp-action="Index" class="nav-item nav-link @(currentController == "Loai" && currentAction == "Index" ? "active" : "")">Quản Lý Loại</a>
                     </li>
                     <li>
-                        <a asp-controller="HangHoa" asp-action="" class="nav-item nav-link @(currentController == "KhachHang" && currentAction == "" ? "active" : "")">Quản Lý Nhà cung cấp</a>
+                        <a asp-controller="NhaCungCap" asp-action="Index" class="nav-item nav-link @(currentController == "NhaCungCap" && currentAction == "Index" ? "active" : "")">Quản Lý Nhà cung cấp</a>
                     </li>
                 </ul>
             </div>

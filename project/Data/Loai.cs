@@ -15,5 +15,10 @@ public partial class Loai
 
     public string? Hinh { get; set; }
 
+    public  string? Slug { get; set; }
+    public bool? Deleted { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
     public virtual ICollection<HangHoa> HangHoas { get; set; } = new List<HangHoa>();
 }

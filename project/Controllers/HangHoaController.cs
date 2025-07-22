@@ -117,6 +117,8 @@ namespace project.Controllers
             ViewData["CurrentQuery"] = query;
             return View(result);
         }
+
+        [Route("HangHoa/ChiTiet /{id:int}")]
         public IActionResult Detail(int id)
         {
             var hangHoa = db.HangHoas
@@ -190,8 +192,9 @@ namespace project.Controllers
             }
             else
             {
+                var HangHoaTimkiem= GenerateAlias(null, query);
                 danhSachHangHoa = db.HangHoas
-                                 .Where(p => p.IsDeleted != true && p.TenAlias != null && p.TenAlias.ToLower().Contains(query.ToLower()))
+                                 .Where(p => p.IsDeleted != true && p.TenAlias != null && p.TenAlias.Contains(HangHoaTimkiem))
                                 .Include(p => p.MaLoaiNavigation)
                                 .Include(p => p.MaNccNavigation)
                                 .OrderByDescending(p => p.MaHh)
@@ -208,7 +211,7 @@ namespace project.Controllers
             ViewBag.CountDeleted = countDeleted;
 
             // 3. Chuẩn bị DropDownList 
-            ViewBag.DanhSachLoai = new SelectList(db.Loais.ToList(), "MaLoai", "TenLoai");
+            ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted != true).ToList(), "MaLoai", "TenLoai");
             ViewBag.DanhSachNcc = new SelectList(db.NhaCungCaps.ToList(), "MaNcc", "TenCongTy");
 
             // 4. Luôn tạo một Model RỖNG cho form
@@ -225,7 +228,7 @@ namespace project.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "Vui lòng kiểm tra lại các thông tin đã nhập.";
-                ViewBag.DanhSachLoai = new SelectList(db.Loais.ToList(), "MaLoai", "TenLoai", model.MaLoai);
+                ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted != true).ToList(), "MaLoai", "TenLoai", model.MaLoai);
                 ViewBag.DanhSachNcc = new SelectList(db.NhaCungCaps.ToList(), "MaNcc", "TenCongTy", model.MaNcc);
                 return View("QuanLySanPham", model); // Trả về View với lỗi
             }
@@ -240,7 +243,7 @@ namespace project.Controllers
             {
                 ModelState.AddModelError("TenHh", "Tên sản phẩm này đã tồn tại.");
                 ViewBag.ErrorMessage = "Thêm/Sửa sản phẩm thất bại.";
-                ViewBag.DanhSachLoai = new SelectList(db.Loais.ToList(), "MaLoai", "TenLoai", model.MaLoai);
+                ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted !=true).ToList(), "MaLoai", "TenLoai", model.MaLoai);
                 ViewBag.DanhSachNcc = new SelectList(db.NhaCungCaps.ToList(), "MaNcc", "TenCongTy", model.MaNcc);
                 return View("QuanLySanPham", model);
             }
@@ -268,6 +271,7 @@ namespace project.Controllers
 
                     // Tạo TenAlias sau khi đã có MaHh
                     newProduct.TenAlias = GenerateAlias(newProduct.MaHh, newProduct.TenHh);
+                    newProduct.TenHh = GenerateSlug(newProduct.TenHh);
                     db.Update(newProduct);
                     await db.SaveChangesAsync(); // Lưu lần 2 để cập nhật TenAlias
 
@@ -303,7 +307,7 @@ namespace project.Controllers
 
                     // Cập nhật TenAlias
                     productToUpdate.TenAlias = GenerateAlias(productToUpdate.MaHh, productToUpdate.TenHh);
-
+                    productToUpdate.TenHh = GenerateSlug(productToUpdate.TenHh);
                     // Chỉ cần gọi Update và SaveChanges một lần duy nhất
                     db.Update(productToUpdate);
                     await db.SaveChangesAsync();
@@ -336,11 +340,55 @@ namespace project.Controllers
             return uniqueFileName;
         }
 
-        private string GenerateAlias(int id, string productName)
+        private string GenerateAlias(int? id, string productName)
         {
+            if (string.IsNullOrEmpty(productName))
+            {
+                return "";
+            }
+
             string chuoiDaChuanHoa = productName.Normalize(System.Text.NormalizationForm.FormD);
-            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", "");
-            return $"{id}-{tenKhongDau.ToLower().Replace(" ", "-")}";
+
+            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
+
+            string tenKhongDauDaSua = tenKhongDau.Replace("đ", "d").Replace("Đ", "D");
+
+            string alias = tenKhongDauDaSua.ToLower().Replace(" ", "-");
+
+            alias = Regex.Replace(alias, @"[^a-z0-9-]", "");
+
+            if (id.HasValue)
+            {
+                return $"{id.Value}-{alias}";
+            }
+
+            return alias;
+        }
+
+        private string GenerateSlug( string productName)
+        {
+            if (string.IsNullOrEmpty(productName))
+            {
+                return "";
+            }
+
+            string chuoiDaChuanHoa = productName.Normalize(System.Text.NormalizationForm.FormD);
+
+            //bỏ dấu
+            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
+
+            string slug = tenKhongDau.Replace("đ", "d").Replace("Đ", "D");
+
+            //bỏ các ký tự đặc biệt không hợp lệ
+            slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+
+            //chuyên thành chữ thường, thay thế khoảng trắng bằng gạch ngang
+            slug = Regex.Replace(slug.ToLower().Trim(), @"\s+", "-");
+
+            slug = Regex.Replace(slug, @"-+", "-"); // Thay thế nhiều gạch ngang bằng một
+            slug = slug.Trim('-'); // Xóa gạch ngang ở đầu và cuối
+
+            return slug;
         }
 
         [HttpDelete]
@@ -407,33 +455,17 @@ namespace project.Controllers
             {
                 return BadRequest(new { success = false, message = "Vui lòng cung cấp danh sách ID sản phẩm để hoàn tác." });
             }
-
+try
+            {
             var productsToRestore = await db.HangHoas
                                             .Where(p => ids.Contains(p.MaHh))
-                                            .ToListAsync();
-
-
-            if (!productsToRestore.Any())
-            {
-                return NotFound(new { success = false, message = "Không tìm thấy sản phẩm nào với các ID đã cung cấp." });
-            }
-
-            try
-            {
-
-                foreach (var product in productsToRestore)
-                {
-                    product.IsDeleted = false;
-                    product.DeletedAt = null;
-                }
-
-
-                await db.SaveChangesAsync();
-
+                                            .ExecuteUpdateAsync(p => p
+                                                .SetProperty(h => h.IsDeleted, false)
+                                                .SetProperty(h => h.DeletedAt,(DateTime?) null));
                 return Ok(new
                 {
                     success = true,
-                    message = $"Đã hoàn tác thành công {productsToRestore.Count} sản phẩm."
+                    message = $"Đã hoàn tác thành công {productsToRestore} sản phẩm."
                 });
             }
             catch (Exception ex)

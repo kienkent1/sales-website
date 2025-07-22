@@ -28,6 +28,7 @@ public partial class HangHoa
     public string? MoTa { get; set; }
 
     public string MaNcc { get; set; } = null!;
+    public string? Slug { get; set; } 
 
     public bool? IsDeleted { get; set; }
 

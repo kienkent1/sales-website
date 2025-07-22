@@ -167,7 +167,7 @@ public partial class Hshop2023Context : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("NgaySX");
-            entity.Property(e => e.TenAlias).HasMaxLength(50);
+            entity.Property(e => e.TenAlias).HasMaxLength(200);
             entity.Property(e => e.TenHh)
                 .HasMaxLength(50)
                 .HasColumnName("TenHH");
@@ -281,9 +281,10 @@ public partial class Hshop2023Context : DbContext
 
             entity.ToTable("Loai");
 
-            entity.Property(e => e.Hinh).HasMaxLength(50);
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+            entity.Property(e => e.Hinh).HasMaxLength(200);
             entity.Property(e => e.TenLoai).HasMaxLength(50);
-            entity.Property(e => e.TenLoaiAlias).HasMaxLength(50);
+            entity.Property(e => e.TenLoaiAlias).HasMaxLength(200);
         });
 
         modelBuilder.Entity<NhaCungCap>(entity =>

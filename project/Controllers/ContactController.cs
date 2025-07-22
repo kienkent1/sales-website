@@ -15,6 +15,7 @@ namespace project.Controllers
             db = context;
             _mapper = mapper;
         }
+        [Route("/lienHe")]
         public IActionResult Index()
         {
             return View();

@@ -107,7 +107,7 @@
                                             @* ngay san xuat *@
                                             <div class="form-item mb-4">
                                                 <label class="form-label my-3">Nhập ngày sản xuất</label>
-                                                <input asp-for="@Model.NgaySx" type="date" class="form-control border-0 py-3">
+                                                <input asp-for="@Model.NgaySx" class="form-control border-0 py-3">
                                                 <span asp-validation-for="@Model.NgaySx" class="text-danger"></span>
                                             </div>
 
@@ -197,7 +197,7 @@
                                             {
                                                 moTaNgan = moTaNgan.Substring(0, 20) + "...";
                                             }
-                                            else if (!string.IsNullOrEmpty(tenRutGon) && tenRutGon.Length > 20)
+                                             if (!string.IsNullOrEmpty(tenRutGon) && tenRutGon.Length > 20)
                                             {
                                                 tenRutGon = tenRutGon.Substring(0, 20) + "...";
                                             }
