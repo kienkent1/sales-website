@@ -9,6 +9,6 @@
         public double DonGia { get; set; }
         public string MoTaNgan { get; set; }
         public string TenLoai { get; set; }
-
+        public string Slug { get; set; }    
     }
 }

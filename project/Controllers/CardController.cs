@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using project.Data;
 using project.Helpers;
 using project.ViewModels;
@@ -19,48 +20,85 @@ namespace project.Controllers
         } 
 
         public List<CartItem> Cart => HttpContext.Session.Get<List<CartItem>>(MySetting.CART_KEY) ?? new List<CartItem>();
+        [Authorize]
+        [Route("GioHang")]
         public IActionResult Index()
         {
-            return View(Cart);
-        }
+            var customerId = HttpContext.User.Claims.SingleOrDefault(c => c.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
 
-        public IActionResult AddToCard(int id, int quality=1)
-        {
-            var gioHang = Cart;
-            var item = gioHang.SingleOrDefault(x => x.MaHangHoa == id);
-            if(item == null)
+            // Xử lý giỏ hàng cho cả người dùng đăng nhập và khách
+            List<CartItem> cartItems = new List<CartItem>();
+
+            if (!string.IsNullOrEmpty(customerId)) 
             {
-                var hangHoa = db.HangHoas.Find(id);
-                if(hangHoa == null)
+                var itemsFromDb = db.GioHangs
+                                     .Include(gh => gh.MaHhNavigation) 
+                                     .Where(gh => gh.MaKh == customerId)
+                                     .ToList();
+
+                cartItems = itemsFromDb.Select(item => new CartItem
+                {
+                    MaGh = item.MaGh,
+                    MaHh = item.MaHh,
+                    TenHangHoa = item.MaHhNavigation.TenHh,
+                    DonGia = (decimal)(item.MaHhNavigation.DonGia ?? 0),
+                    HinhAnh = item.MaHhNavigation.Hinh ?? string.Empty,
+                    Slug=item.MaHhNavigation.Slug,
+                    SoLuong = item.SoLuong
+                }).ToList();
+            }
+
+
+            return View(cartItems);
+        }
+        
+        public async Task<IActionResult> AddToCart(int id, int quantity = 1)
+        {
+       
+            var customerId = HttpContext.User.Claims.SingleOrDefault(x => x.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+
+            if (string.IsNullOrEmpty(customerId))
+            {
+                return RedirectToAction("Login", "KhachHang", new { ReturnUrl = Url.Action("Details", "HangHoa", new { id = id }) });
+            }
+
+            var cartItem = await db.GioHangs.SingleOrDefaultAsync(x => x.MaHh == id && x.MaKh == customerId);
+
+            if (cartItem == null) 
+            {
+
+                var product = await db.HangHoas.FindAsync(id);
+                if (product == null)
                 {
                     TempData["message"] = $"Không tìm thấy sản phẩm có mã: {id}";
                     return Redirect("/404");
                 }
-                  item = new CartItem
+                cartItem = new GioHang
                 {
-                    MaHangHoa = hangHoa.MaHh,
-                    TenHangHoa = hangHoa.TenHh,
-                    SoLuong = quality,
-                    DonGia = (decimal)(hangHoa.DonGia ?? 0),
-                    HinhAnh = hangHoa.Hinh ?? string .Empty,
+                    MaKh = customerId,
+                    MaHh = id,
+                    SoLuong = quantity
                 };
-                gioHang.Add(item);
+                db.GioHangs.Add(cartItem);
             }
-            else
+            else 
             {
-                item.SoLuong += quality;
+                cartItem.SoLuong += quantity;
             }
-            HttpContext.Session.Set(MySetting.CART_KEY, gioHang);
-            return RedirectToAction("Index");
+
+
+            await db.SaveChangesAsync();
+
+            TempData["Message"] = "Thêm sản phẩm vào giỏ hàng thành công!";
+            return RedirectToAction("Index", "Card"); 
         }
         public IActionResult RemoveCard(int id)
         {
-            var gioHang = Cart;
-            var item = gioHang.SingleOrDefault(x => x.MaHangHoa == id);
+            var item = db.GioHangs.SingleOrDefault(x => x.MaGh == id);
             if (item != null)
             {
-                gioHang.Remove(item);
-                HttpContext.Session.Set(MySetting.CART_KEY, gioHang);
+                db.GioHangs.Remove(item);
+                db.SaveChanges();
             }
             return RedirectToAction("Index");
         }
@@ -120,7 +158,7 @@ namespace project.Controllers
                             cthd.Add(new ChiTietHd
                             {
                                 MaHd = hoadon.MaHd,
-                                MaHh = item.MaHangHoa,
+                                MaHh = item.MaHh,
                                 SoLuong = item.SoLuong,
                                 DonGia = (double)item.DonGia,
                                 GiamGia = 0,
@@ -189,5 +227,62 @@ namespace project.Controllers
             }
         }
         #endregion
+
+        public class UpdateCartInput
+        {
+            public int Id { get; set; }
+            public int Quantity { get; set; }
+        }
+
+        [HttpPost]
+        [Authorize]
+        // Đặt tên Route rõ ràng
+        [Route("/Card/UpdateCart")]
+        // Validate token để chống tấn công CSRF
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCart([FromBody] UpdateCartInput model)
+        {
+            var customerId = HttpContext.User.Claims.SingleOrDefault(c => c.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+
+            var cartItem = await db.GioHangs
+                                   .Include(gh => gh.MaHhNavigation)
+                                   .SingleOrDefaultAsync(gh => gh.MaGh == model.Id && gh.MaKh == customerId);
+
+            if (cartItem == null)
+            {
+                return NotFound(new { success = false, message = "Sản phẩm không tồn tại trong giỏ hàng." });
+            }
+
+            if (model.Quantity <= 0)
+            {
+                // Nếu số lượng <= 0, ta sẽ xóa sản phẩm khỏi giỏ hàng
+                db.GioHangs.Remove(cartItem);
+            }
+            else
+            {
+                cartItem.SoLuong = model.Quantity;
+            }
+
+            await db.SaveChangesAsync();
+
+            // Tính toán lại các giá trị tổng để trả về
+            var itemsInCart = db.GioHangs
+                                .Include(gh => gh.MaHhNavigation)
+                                .Where(gh => gh.MaKh == customerId);
+
+            decimal newItemTotal = (decimal)(cartItem.MaHhNavigation.DonGia ?? 0) * model.Quantity;
+            decimal cartSubtotal = itemsInCart.Sum(item => item.SoLuong * (decimal)(item.MaHhNavigation.DonGia ?? 0));
+            decimal shippingFee = 3.00m; // Giả sử phí ship cố định là $3
+            decimal cartTotal = cartSubtotal + shippingFee;
+
+            return Ok(new
+            {
+                success = true,
+                newItemTotal = newItemTotal.ToString("N2"), // Định dạng 2 chữ số thập phân
+                cartSubtotal = cartSubtotal.ToString("N2"),
+                cartTotal = cartTotal.ToString("N2"),
+                message = "Cập nhật giỏ hàng thành công."
+            });
+        }
     }
 }

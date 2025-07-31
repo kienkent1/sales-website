@@ -31,7 +31,13 @@ namespace project.Helpers
             .ForMember(dest => dest.HinhUrl, opt => opt.MapFrom(src => src.Hinh));
 
             CreateMap<LoaiVM, Loai>();
-
+            CreateMap<NhaCungCapVM, NhaCungCap>();
+            CreateMap<UserVM, KhachHang>()
+                .ForMember(dest => dest.MatKhau, opt => opt.Ignore())
+            // Báo cho AutoMapper: "Đừng bao giờ động đến thuộc tính RandomKey của đối tượng đích"
+            .ForMember(dest => dest.RandomKey, opt => opt.Ignore())
+            // (Tùy chọn) Bỏ qua cả việc map ảnh, vì chúng ta sẽ xử lý nó thủ công
+            .ForMember(dest => dest.Hinh, opt => opt.Ignore());
         }
     }
     

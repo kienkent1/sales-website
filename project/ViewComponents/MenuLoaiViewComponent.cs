@@ -18,10 +18,12 @@ namespace project.ViewComponents
                TenLoai= lo.TenLoai,
                 SoLuong=lo.HangHoas.Count,    
                 Hinh=lo.Hinh,
+                slug=lo.Slug,
             }).OrderBy(p=>p.TenLoai);
 
             List<NhaCungCap> list;
             list = db.NhaCungCaps
+                .Where(p => p.Deleted != true)
                .OrderByDescending(p => p.TenCongTy)
                .ToList();
 

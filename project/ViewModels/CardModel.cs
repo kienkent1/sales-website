@@ -2,7 +2,13 @@
 {
     public class CardModel
     {
-        public int Quality { get; set; }
+        public string MaKh { get; set; } 
+
+        public int SoLuong { get; set; }
+
+        public int MaHh { get; set; }
+
+        public int Soluong { get; set; }
         public double Total { get; set; }
        
     }

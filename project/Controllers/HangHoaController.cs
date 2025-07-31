@@ -1,45 +1,48 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using project.Data;
+using project.Helpers;
 using project.ViewModels;
 using System.Text.RegularExpressions;
 
 namespace project.Controllers
 {
+  
     public class HangHoaController : Controller
     {
         private readonly Hshop2023Context db;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        public HangHoaController(Hshop2023Context context, IMapper mapper, IWebHostEnvironment webHostEnvironment)
+        private readonly Util _util;
+        public HangHoaController(Hshop2023Context context, IMapper mapper, Util util)
         {
             db = context;
-            _mapper=mapper;
-            _webHostEnvironment = webHostEnvironment;
+            _mapper = mapper;
+            _util = util;
         }
-        public async Task<IActionResult> Index(int? loai, string? NCC, int pageNumber = 1)
+        public async Task<IActionResult> Index(string? loai, string? brand, int pageNumber = 1)
         {
-           
+
             // 1. Định nghĩa số lượng item trên mỗi trang
             int pageSize = 12;
             // 2. Bắt đầu xây dựng câu truy vấn (chưa thực thi)
             IQueryable<HangHoa> hangHoas = db.HangHoas.AsQueryable();
 
-     
+
             hangHoas = hangHoas.Where(hh => hh.IsDeleted != true);
 
             // 3. Áp dụng bộ lọc NẾU CÓ. Câu truy vấn vẫn chưa được thực thi.
-            if (loai.HasValue)
+            if (!string.IsNullOrEmpty(loai))
             {
-                hangHoas = hangHoas.Where(hh => hh.MaLoai == loai.Value);
+                hangHoas = hangHoas.Where(hh => hh.MaLoaiNavigation.Slug == loai);
             }
-            if (NCC != null)
+            if (!string.IsNullOrEmpty(brand))
             {
-                hangHoas = hangHoas.Where(hh => hh.MaNcc == NCC);
+                hangHoas = hangHoas.Where(hh => hh.MaNccNavigation.Slug == brand);
             }
             // 4. Đếm tổng số item SAU KHI đã lọc để tính số trang chính xác.
             // Câu truy vấn COUNT(*) sẽ được gửi đến DB ở đây.
@@ -57,6 +60,7 @@ namespace project.Controllers
       {
           MaHangHoa = p.MaHh,
           TenHangHoa = p.TenHh,
+          Slug = p.Slug,
           HinhAnh = p.Hinh ?? "",
           DonGia = p.DonGia ?? 0,
           MoTaNgan = p.MoTaDonVi ?? "",
@@ -68,9 +72,11 @@ namespace project.Controllers
             ViewData["TotalPages"] = totalPages;
             ViewData["CurrentPage"] = pageNumber;
             ViewData["CurrentLoai"] = loai;
+            ViewData["CurrentNCC"] = brand;
             return View(result);
         }
-        
+
+        [Route("/CuaHang/TimKiem")]
         public async Task<IActionResult> Search(string query, int pageNumber = 1)
         {
             int pageSize = 12;
@@ -79,9 +85,11 @@ namespace project.Controllers
             IQueryable<HangHoa> hangHoasQuery = db.HangHoas.AsQueryable();
 
             // 2. Áp dụng các bộ lọc để xây dựng câu truy vấn
+
             if (!string.IsNullOrWhiteSpace(query))
             {
-                hangHoasQuery = hangHoasQuery.Where(hh => hh.TenHh.ToLower().Contains(query.ToLower()));
+                query= Helpers.Util.GenerateSlug(query);
+                hangHoasQuery = hangHoasQuery.Where(hh => hh.Slug.Contains(query.ToLower()) || hh.MaLoaiNavigation.Slug.Contains(query.ToLower()) || hh.MaNccNavigation.Slug.Contains(query.ToLower()) );
             }
 
             // Luôn lọc ra các sản phẩm chưa bị xóa
@@ -118,22 +126,23 @@ namespace project.Controllers
             return View(result);
         }
 
-        [Route("HangHoa/ChiTiet /{id:int}")]
-        public IActionResult Detail(int id)
+        //[Route("HangHoa /{id}")]
+        public IActionResult Detail(string id)
         {
             var hangHoa = db.HangHoas
                 .Include(hh => hh.MaLoaiNavigation)
-                .SingleOrDefault(hh => hh.MaHh == id);
+                 .FirstOrDefault(hh => hh.Slug == id);
 
 
             if (hangHoa == null)
             {
-                TempData["Message"] = $"Không tìm thấy sản phẩm có mã {id}";
+                TempData["Message"] = $"Không tìm thấy sản phẩm này";
                 return Redirect("/404");
             }
             var result = new DetailProductVM
             {
                 MaHangHoa = hangHoa.MaHh,
+                Slug = hangHoa.Slug,
                 TenHangHoa = hangHoa.TenHh,
                 MoTa = hangHoa.MoTa ?? "",
                 HinhAnh = hangHoa.Hinh ?? "",
@@ -177,7 +186,8 @@ namespace project.Controllers
             return Ok(productData);
         }
 
-        public IActionResult QuanLySanPham(string? query) 
+        [Authorize(Roles = "1,2")]
+        public IActionResult QuanLySanPham(string? query)
         {
             // 1. Lấy danh sách sản phẩm cho bảng 
             List<HangHoa> danhSachHangHoa;
@@ -192,7 +202,7 @@ namespace project.Controllers
             }
             else
             {
-                var HangHoaTimkiem= GenerateAlias(null, query);
+                var HangHoaTimkiem = Helpers.Util.GenerateAlias(null, query);
                 danhSachHangHoa = db.HangHoas
                                  .Where(p => p.IsDeleted != true && p.TenAlias != null && p.TenAlias.Contains(HangHoaTimkiem))
                                 .Include(p => p.MaLoaiNavigation)
@@ -204,6 +214,7 @@ namespace project.Controllers
                     TempData["Message"] = "Không tìm thấy sản phẩm nào với từ khóa tìm kiếm.";
                 }
             }
+            ViewBag.CurrentQuery = query;
             ViewBag.hangHoa = danhSachHangHoa;
 
             // 2. Chuẩn bị dữ liệu phụ 
@@ -243,7 +254,7 @@ namespace project.Controllers
             {
                 ModelState.AddModelError("TenHh", "Tên sản phẩm này đã tồn tại.");
                 ViewBag.ErrorMessage = "Thêm/Sửa sản phẩm thất bại.";
-                ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted !=true).ToList(), "MaLoai", "TenLoai", model.MaLoai);
+                ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted != true).ToList(), "MaLoai", "TenLoai", model.MaLoai);
                 ViewBag.DanhSachNcc = new SelectList(db.NhaCungCaps.ToList(), "MaNcc", "TenCongTy", model.MaNcc);
                 return View("QuanLySanPham", model);
             }
@@ -259,7 +270,7 @@ namespace project.Controllers
                     // Xử lý upload file (nếu có)
                     if (model.Hinh != null && model.Hinh.Length > 0)
                     {
-                        newProduct.Hinh = await UploadImage(model.Hinh,"HangHoa");
+                        newProduct.Hinh = await _util.UploadImage(model.Hinh, "HangHoa");
                     }
 
                     newProduct.SoLanXem = 0; // Chỉ set cho sản phẩm mới
@@ -270,8 +281,8 @@ namespace project.Controllers
                     await db.SaveChangesAsync();
 
                     // Tạo TenAlias sau khi đã có MaHh
-                    newProduct.TenAlias = GenerateAlias(newProduct.MaHh, newProduct.TenHh);
-                    newProduct.TenHh = GenerateSlug(newProduct.TenHh);
+                    newProduct.TenAlias = Helpers.Util.GenerateAlias(newProduct.MaHh, newProduct.TenHh);
+                    newProduct.Slug = Helpers.Util.GenerateSlug(newProduct.TenHh);
                     db.Update(newProduct);
                     await db.SaveChangesAsync(); // Lưu lần 2 để cập nhật TenAlias
 
@@ -297,7 +308,7 @@ namespace project.Controllers
                     // Xử lý upload file (nếu có)
                     if (model.Hinh != null && model.Hinh.Length > 0)
                     {
-                        productToUpdate.Hinh = await UploadImage(model.Hinh,"HangHoa");
+                        productToUpdate.Hinh = await _util.UploadImage(model.Hinh, "HangHoa");
                         // (Tùy chọn) Xóa file ảnh cũ nếu cần
                     }
                     else
@@ -306,8 +317,8 @@ namespace project.Controllers
                     }
 
                     // Cập nhật TenAlias
-                    productToUpdate.TenAlias = GenerateAlias(productToUpdate.MaHh, productToUpdate.TenHh);
-                    productToUpdate.TenHh = GenerateSlug(productToUpdate.TenHh);
+                    productToUpdate.TenAlias = Helpers.Util.GenerateAlias(productToUpdate.MaHh, productToUpdate.TenHh);
+                    productToUpdate.TenHh = Helpers.Util.GenerateSlug(productToUpdate.TenHh);
                     // Chỉ cần gọi Update và SaveChanges một lần duy nhất
                     db.Update(productToUpdate);
                     await db.SaveChangesAsync();
@@ -326,70 +337,6 @@ namespace project.Controllers
             }
         }
 
-        // Hàm trợ giúp để tránh lặp code (có thể để private trong cùng controller)
-        private async Task<string> UploadImage(IFormFile file, string TenFolder)
-        {
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Hinh", TenFolder);
-            Directory.CreateDirectory(uploadsFolder);
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(file.FileName);
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return uniqueFileName;
-        }
-
-        private string GenerateAlias(int? id, string productName)
-        {
-            if (string.IsNullOrEmpty(productName))
-            {
-                return "";
-            }
-
-            string chuoiDaChuanHoa = productName.Normalize(System.Text.NormalizationForm.FormD);
-
-            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
-
-            string tenKhongDauDaSua = tenKhongDau.Replace("đ", "d").Replace("Đ", "D");
-
-            string alias = tenKhongDauDaSua.ToLower().Replace(" ", "-");
-
-            alias = Regex.Replace(alias, @"[^a-z0-9-]", "");
-
-            if (id.HasValue)
-            {
-                return $"{id.Value}-{alias}";
-            }
-
-            return alias;
-        }
-
-        private string GenerateSlug( string productName)
-        {
-            if (string.IsNullOrEmpty(productName))
-            {
-                return "";
-            }
-
-            string chuoiDaChuanHoa = productName.Normalize(System.Text.NormalizationForm.FormD);
-
-            //bỏ dấu
-            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
-
-            string slug = tenKhongDau.Replace("đ", "d").Replace("Đ", "D");
-
-            //bỏ các ký tự đặc biệt không hợp lệ
-            slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
-
-            //chuyên thành chữ thường, thay thế khoảng trắng bằng gạch ngang
-            slug = Regex.Replace(slug.ToLower().Trim(), @"\s+", "-");
-
-            slug = Regex.Replace(slug, @"-+", "-"); // Thay thế nhiều gạch ngang bằng một
-            slug = slug.Trim('-'); // Xóa gạch ngang ở đầu và cuối
-
-            return slug;
-        }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteSorftProduct(int id)
@@ -401,7 +348,7 @@ namespace project.Controllers
             }
             try
             {
-                
+
                 product.IsDeleted = true; // Đánh dấu là đã xóa mềm
                 product.DeletedAt = DateTime.Now; // Ghi lại thời gian xóa
 
@@ -415,16 +362,18 @@ namespace project.Controllers
             }
         }
 
-        public IActionResult Gabage(string? query) {
+        [Authorize(Roles = "1,2")]
+        public IActionResult Gabage(string? query)
+        {
             var deletedProducts = new List<HangHoa>();
             if (query == null)
             {
-                 deletedProducts = db.HangHoas
-                .Where(p => p.IsDeleted == true)
-                .OrderByDescending(p => p.DeletedAt)
-                .Include(p => p.MaLoaiNavigation)
-                 .Include(p => p.MaNccNavigation)
-                .ToList();
+                deletedProducts = db.HangHoas
+               .Where(p => p.IsDeleted == true)
+               .OrderByDescending(p => p.DeletedAt)
+               .Include(p => p.MaLoaiNavigation)
+                .Include(p => p.MaNccNavigation)
+               .ToList();
             }
             else
             {
@@ -435,12 +384,12 @@ namespace project.Controllers
                .Include(p => p.MaLoaiNavigation)
                 .Include(p => p.MaNccNavigation)
                .ToList();
-                if(deletedProducts.Count == 0)
+                if (deletedProducts.Count == 0)
                 {
                     TempData["Message"] = "Không tìm thấy sản phẩm nào trong thùng rác với từ khóa tìm kiếm.";
                 }
             }
-           
+
             ViewBag.ProductsInGabge = deletedProducts;
             ViewBag.CurrentQuery = query;
 
@@ -448,20 +397,20 @@ namespace project.Controllers
         }
 
         [HttpPost("~/HangHoa/Restore")]
-        public async Task<IActionResult> Restore([FromBody] List<int>ids)
+        public async Task<IActionResult> Restore([FromBody] List<int> ids)
         {
 
             if (ids == null || !ids.Any())
             {
                 return BadRequest(new { success = false, message = "Vui lòng cung cấp danh sách ID sản phẩm để hoàn tác." });
             }
-try
+            try
             {
-            var productsToRestore = await db.HangHoas
-                                            .Where(p => ids.Contains(p.MaHh))
-                                            .ExecuteUpdateAsync(p => p
-                                                .SetProperty(h => h.IsDeleted, false)
-                                                .SetProperty(h => h.DeletedAt,(DateTime?) null));
+                var productsToRestore = await db.HangHoas
+                                                .Where(p => ids.Contains(p.MaHh))
+                                                .ExecuteUpdateAsync(p => p
+                                                    .SetProperty(h => h.IsDeleted, false)
+                                                    .SetProperty(h => h.DeletedAt, (DateTime?)null));
                 return Ok(new
                 {
                     success = true,

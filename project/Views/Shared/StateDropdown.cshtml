@@ -7,9 +7,10 @@
 
         // Thẻ <a> bao bọc avatar hoặc icon mặc định
         <a class="dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" href="#" role="button">
+
             @if (!string.IsNullOrEmpty(avatarFileName))
             {
-                <img src="~/Hinh/KhachHang/@avatarFileName" class="rounded-circle" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">
+                <img src="~/Hinh/KhachHang/@avatarFileName" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;" />
             }
             else
             {
@@ -27,9 +28,12 @@
                 </a>
             </li>
             <li>
-                <a class="dropdown-item" asp-controller="KhachHang" asp-action="DangXuat">
-                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
-                </a>
+                <form asp-controller="KhachHang" asp-action="DangXuat" method="post" id="logoutForm">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                    </button>
+                </form>
             </li>
         </ul>
     }

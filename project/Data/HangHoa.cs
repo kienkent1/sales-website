@@ -21,22 +21,25 @@ public partial class HangHoa
 
     public DateTime NgaySx { get; set; }
 
-    public double GiamGia { get; set; }
+    public double? GiamGia { get; set; }
 
     public int SoLanXem { get; set; }
 
     public string? MoTa { get; set; }
 
     public string MaNcc { get; set; } = null!;
-    public string? Slug { get; set; } 
 
     public bool? IsDeleted { get; set; }
 
     public DateTime? DeletedAt { get; set; }
 
+    public string? Slug { get; set; }
+
     public virtual ICollection<BanBe> BanBes { get; set; } = new List<BanBe>();
 
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
+
+    public virtual ICollection<GioHang> GioHangs { get; set; } = new List<GioHang>();
 
     public virtual Loai MaLoaiNavigation { get; set; } = null!;
 

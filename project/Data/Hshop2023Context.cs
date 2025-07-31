@@ -21,6 +21,8 @@ public partial class Hshop2023Context : DbContext
 
     public virtual DbSet<ChuDe> ChuDes { get; set; }
 
+    public virtual DbSet<GioHang> GioHangs { get; set; }
+
     public virtual DbSet<GopY> Gopies { get; set; }
 
     public virtual DbSet<HangHoa> HangHoas { get; set; }
@@ -32,6 +34,8 @@ public partial class Hshop2023Context : DbContext
     public virtual DbSet<KhachHang> KhachHangs { get; set; }
 
     public virtual DbSet<Loai> Loais { get; set; }
+
+    public virtual DbSet<MaGiamGium> MaGiamGia { get; set; }
 
     public virtual DbSet<NhaCungCap> NhaCungCaps { get; set; }
 
@@ -124,6 +128,29 @@ public partial class Hshop2023Context : DbContext
                 .HasConstraintName("FK_ChuDe_NhanVien");
         });
 
+        modelBuilder.Entity<GioHang>(entity =>
+        {
+            entity.HasKey(e => e.MaGh).HasName("PK__GioHang__2725AE855375434D");
+
+            entity.ToTable("GioHang");
+
+            entity.Property(e => e.MaGh).HasColumnName("MaGH");
+            entity.Property(e => e.MaHh).HasColumnName("MaHH");
+            entity.Property(e => e.MaKh)
+                .HasMaxLength(20)
+                .HasColumnName("MaKH");
+
+            entity.HasOne(d => d.MaHhNavigation).WithMany(p => p.GioHangs)
+                .HasForeignKey(d => d.MaHh)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__GioHang__MaHH__30C33EC3");
+
+            entity.HasOne(d => d.MaKhNavigation).WithMany(p => p.GioHangs)
+                .HasForeignKey(d => d.MaKh)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__GioHang__MaKH__2FCF1A8A");
+        });
+
         modelBuilder.Entity<GopY>(entity =>
         {
             entity.HasKey(e => e.MaGy);
@@ -157,6 +184,7 @@ public partial class Hshop2023Context : DbContext
             entity.Property(e => e.MaHh).HasColumnName("MaHH");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
             entity.Property(e => e.DonGia).HasDefaultValue(0.0);
+            entity.Property(e => e.GiamGia).HasDefaultValue(0.0);
             entity.Property(e => e.Hinh).HasMaxLength(300);
             entity.Property(e => e.IsDeleted).HasColumnName("is_Deleted");
             entity.Property(e => e.MaNcc)
@@ -167,9 +195,12 @@ public partial class Hshop2023Context : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("NgaySX");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(100)
+                .HasColumnName("slug");
             entity.Property(e => e.TenAlias).HasMaxLength(200);
             entity.Property(e => e.TenHh)
-                .HasMaxLength(50)
+                .HasMaxLength(100)
                 .HasColumnName("TenHH");
 
             entity.HasOne(d => d.MaLoaiNavigation).WithMany(p => p.HangHoas)
@@ -259,12 +290,11 @@ public partial class Hshop2023Context : DbContext
             entity.Property(e => e.MaKh)
                 .HasMaxLength(20)
                 .HasColumnName("MaKH");
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
             entity.Property(e => e.DiaChi).HasMaxLength(60);
             entity.Property(e => e.DienThoai).HasMaxLength(24);
             entity.Property(e => e.Email).HasMaxLength(50);
-            entity.Property(e => e.Hinh)
-                .HasMaxLength(50)
-                .HasDefaultValue("Photo.gif");
+            entity.Property(e => e.Hinh).HasMaxLength(200);
             entity.Property(e => e.HoTen).HasMaxLength(50);
             entity.Property(e => e.MatKhau).HasMaxLength(50);
             entity.Property(e => e.NgaySinh)
@@ -283,8 +313,22 @@ public partial class Hshop2023Context : DbContext
 
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
             entity.Property(e => e.Hinh).HasMaxLength(200);
+            entity.Property(e => e.Slug)
+                .HasMaxLength(100)
+                .HasColumnName("slug");
             entity.Property(e => e.TenLoai).HasMaxLength(50);
             entity.Property(e => e.TenLoaiAlias).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<MaGiamGium>(entity =>
+        {
+            entity.HasNoKey();
+
+            entity.Property(e => e.HetHan).HasColumnType("datetime");
+            entity.Property(e => e.Loai).HasMaxLength(50);
+            entity.Property(e => e.MaGg)
+                .HasMaxLength(100)
+                .HasColumnName("MaGG");
         });
 
         modelBuilder.Entity<NhaCungCap>(entity =>
@@ -296,11 +340,15 @@ public partial class Hshop2023Context : DbContext
             entity.Property(e => e.MaNcc)
                 .HasMaxLength(50)
                 .HasColumnName("MaNCC");
-            entity.Property(e => e.DiaChi).HasMaxLength(50);
-            entity.Property(e => e.DienThoai).HasMaxLength(50);
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+            entity.Property(e => e.DiaChi).HasMaxLength(100);
+            entity.Property(e => e.DienThoai).HasMaxLength(20);
             entity.Property(e => e.Email).HasMaxLength(50);
-            entity.Property(e => e.Logo).HasMaxLength(50);
+            entity.Property(e => e.Logo).HasMaxLength(200);
             entity.Property(e => e.NguoiLienLac).HasMaxLength(50);
+            entity.Property(e => e.Slug)
+                .HasMaxLength(100)
+                .HasColumnName("slug");
             entity.Property(e => e.TenCongTy).HasMaxLength(50);
         });
 

@@ -12,7 +12,7 @@
 
     @if (User?.Identity?.IsAuthenticated == true)
     {
-        @if (User.IsInRole("1"))
+        @if (User.IsInRole("1") || User.IsInRole("2"))
         {
             <div class="dropdown me-3  d-flex align-items-center ps-3">
                 <a class="dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false" href="#" role="button">Quản lý</a>
@@ -27,6 +27,12 @@
                     <li>
                         <a asp-controller="NhaCungCap" asp-action="Index" class="nav-item nav-link @(currentController == "NhaCungCap" && currentAction == "Index" ? "active" : "")">Quản Lý Nhà cung cấp</a>
                     </li>
+                    @if (User.IsInRole("2"))
+                    {
+                        <li>
+                            <a asp-controller="KhachHang" asp-action="QuanLyTaiKhoan" class="nav-item nav-link @(currentController == "KhachHang" && currentAction == "QuanLyTaiKhoan" ? "active" : "")">Quản Lý tài khoản</a>
+                        </li>
+                    }
                 </ul>
             </div>
         }

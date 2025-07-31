@@ -6,5 +6,6 @@
         public string TenLoai { get; set; }
         public int SoLuong { get; set; }
         public string? Hinh { get; set; }
+        public string? slug { get; set; }
     }
 }

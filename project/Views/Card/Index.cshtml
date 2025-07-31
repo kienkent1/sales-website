@@ -1,4 +1,5 @@
-﻿@model IEnumerable<project.ViewModels.CartItem>
+﻿@* File: Views/Card/Index.cshtml *@
+@model IEnumerable<project.ViewModels.CartItem>
 @{
     ViewData["Title"] = "Giỏ hàng";
 }
@@ -7,64 +8,79 @@
 @await Html.PartialAsync("SinglePage")
 <!-- Single Page Header End -->
 <!-- Cart Page Start -->
+@if (!Model.Any())
+{
+    <div class="container-fluid py-5 ">
+        <div class="container py-5  d-flex flex-column justify-content-center col-md-4">
+            <img src="~/img/gioh_trong.png"  class="img-fluid  mb-4" alt="Giỏ hàng trống">
+            <h1 class="text-center">Giỏ hàng trống</h1>
+            <p class="text-center">Hãy thêm sản phẩm vào giỏ hàng của bạn.</p>
+            <a class="btn btn-primary text-white " asp-action="Index" asp-controller="HangHoa">Mua Ngay</a>
+        </div>
+    </div>
+    return;
+}
+
 <div class="container-fluid py-5">
     <div class="container py-5">
+      
+        @Html.AntiForgeryToken()
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
-                        <th scope="col">Products</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Total</th>
+                        <th scope="col">Sản phẩm</th>
+                        <th scope="col">Tên hàng hóa</th>
+                        <th scope="col">Giá</th>
+                        <th scope="col">Số lượng</th>
+                        <th scope="col">Tổng</th>
                         <th scope="col">Handle</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var item in Model)
+                    @foreach (var item in Model)
                     {
-                        <tr>
-                        <th scope="row">
-                            <div class="d-flex align-items-center">
-                                <img src="/Hinh/HangHoa/@item.HinhAnh" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="">
-                            </div>
-                        </th>
-                        <td>
-                             <a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@item.MaHangHoa">
-                            <p class="mb-0 mt-4">@item.TenHangHoa</p>
-                            </a>
-                        </td>
-                        <td>
-                            <p class="mb-0 mt-4">@item.DonGia $</p>
-                        </td>
-                        <td>
-                            <div class="input-group quantity mt-4" style="width: 100px;">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-minus rounded-circle bg-light border">
-                                        <i class="fa fa-minus"></i>
-                                    </button>
+                        
+                        <tr id="row-@item.MaGh">
+                            <th scope="row">
+                                <div class="d-flex align-items-center">
+                                    <img src="/Hinh/HangHoa/@item.HinhAnh" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="">
                                 </div>
-                                <input type="text" class="form-control form-control-sm text-center border-0" value="@item.SoLuong">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-plus rounded-circle bg-light border">
-                                        <i class="fa fa-plus"></i>
-                                    </button>
+                            </th>
+                            <td>
+                                <a asp-action="Detail" asp-controller="HangHoa" asp-route-id="@item.Slug">
+                                    <p class="mb-0 mt-4">@item.TenHangHoa</p>
+                                </a>
+                            </td>
+                            <td>
+                                <p class="mb-0 mt-4">@item.DonGia $</p>
+                            </td>
+                            <td>
+                                <div class="input-group GiaTri mt-4" style="width: 100px;" data-id="@item.MaGh">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-sm btn-tru rounded-circle bg-light border">
+                                            <i class="fa fa-minus"></i>
+                                        </button>
+                                    </div>
+                                   
+                                    <input type="text" class="form-control form-control-sm text-center border-0 GiaTri-input" value="@item.SoLuong">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-sm btn-them rounded-circle bg-light border">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <p class="mb-0 mt-4">@item.ThanhTien $</p>
-                        </td>
-                        <td>
-                            <a asp-action="RemoveCard" asp-controller="Card" asp-route-id="@item.MaHangHoa" class="btn btn-md rounded-circle bg-light border mt-4">
-                                <i class="fa fa-times text-danger"></i>
-                            </a>
-                        </td>
-
-                    </tr>
+                            </td>
+                            <td>
+                                <p class="mb-0 mt-4 item-total">@item.ThanhTien $</p>
+                            </td>
+                            <td>
+                                <a asp-action="RemoveCard" asp-controller="Card" asp-route-id="@item.MaGh" class="btn btn-md rounded-circle bg-light border mt-4">
+                                    <i class="fa fa-times text-danger"></i>
+                                </a>
+                            </td>
+                        </tr>
                     }
-                    
                 </tbody>
             </table>
         </div>
@@ -80,7 +96,7 @@
                         <h1 class="display-6 mb-4">Cart <span class="fw-normal">Total</span></h1>
                         <div class="d-flex justify-content-between mb-4">
                             <h5 class="mb-0 me-4">Subtotal:</h5>
-                            <p class="mb-0">$@Model.Sum(p=>p.ThanhTien)</p>
+                            <p class="mb-0" id="cart-subtotal">$@Model.Sum(p => p.ThanhTien)</p>
                         </div>
                         <div class="d-flex justify-content-between">
                             <h5 class="mb-0 me-4">Shipping</h5>
@@ -92,12 +108,125 @@
                     </div>
                     <div class="py-4 mb-4 border-top border-bottom d-flex justify-content-between">
                         <h5 class="mb-0 ps-4 me-4">Total</h5>
-                        <p class="mb-0 pe-4">$@Model.Sum(p => p.ThanhTien)</p>
+                        @* Sửa lại tính toán tổng tiền ban đầu *@
+                        <p class="mb-0 pe-4" id="cart-total">$@(Model.Sum(p => (decimal)p.ThanhTien) + 3.00m)</p>
                     </div>
-                    <a asp-action="ThanhToan" asp-controller="Card" class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" >Thanh toán</a>
+                    <a asp-action="ThanhToan" asp-controller="Card" class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh toán</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <!-- Cart Page End -->
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Hàm để gửi yêu cầu cập nhật số lượng
+                    // Hàm updateCartQuantity được nâng cấp để xử lý cả việc xóa
+        async function updateCartQuantity(cartId, newQuantity) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // Hiển thị hiệu ứng loading (tùy chọn nhưng nên có)
+            const row = document.querySelector(`#row-${cartId}`);
+            if(row) row.style.opacity = '0.5';
+
+            try {
+                const response = await fetch('/Card/UpdateCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ id: cartId, quantity: newQuantity })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (newQuantity <= 0) {
+
+                        if (row) {
+                            row.remove();
+                        }
+                    } else {
+                        // Cập nhật thành tiền của sản phẩm nếu chỉ giảm số lượng
+                        if(row) {
+                            row.querySelector('.item-total').textContent = data.newItemTotal + ' $';
+                            row.style.opacity = '1'; // Khôi phục độ mờ
+                        }
+                    }
+
+                    // Luôn cập nhật tổng tiền của giỏ hàng
+                    document.querySelector('#cart-subtotal').textContent = '$' + data.cartSubtotal;
+                    document.querySelector('#cart-total').textContent = '$' + data.cartTotal;
+
+                    // Kiểm tra xem giỏ hàng có còn sản phẩm nào không
+                    const remainingRows = document.querySelectorAll('tbody tr');
+                    if (remainingRows.length === 0) {
+                        // Nếu không còn, có thể tải lại trang để hiển thị thông báo "Giỏ hàng trống"
+                        window.location.reload();
+                    }
+
+                } else {
+                    alert(data.message || "Có lỗi xảy ra, không thể cập nhật.");
+                    if(row) row.style.opacity = '1'; // Khôi phục nếu có lỗi
+                }
+            } catch (error) {
+                console.error('Lỗi khi cập nhật giỏ hàng:', error);
+                alert("Lỗi kết nối, vui lòng thử lại.");
+                if(row) row.style.opacity = '1'; // Khôi phục nếu có lỗi
+            }
+        }
+
+            // Lắng nghe sự kiện click cho TẤT CẢ các nút PLUS
+            document.querySelectorAll('.btn-them').forEach(button => {
+                button.addEventListener('click', function () {
+                    const quantityContainer = this.closest('.GiaTri');
+                    const input = quantityContainer.querySelector('.GiaTri-input');
+                    const cartId = quantityContainer.getAttribute('data-id');
+
+                    let newQuantity = parseInt(input.value) + 1;
+                    input.value = newQuantity; // Cập nhật input ngay lập tức
+
+                    updateCartQuantity(cartId, newQuantity);
+                });
+            });
+
+            // Lắng nghe sự kiện click cho TẤT CẢ các nút MINUS
+                    // Đoạn code cho nút trừ, đã được bổ sung logic confirm
+        document.querySelectorAll('.btn-tru').forEach(button => {
+            button.addEventListener('click', function () {
+                const quantityContainer = this.closest('.GiaTri');
+                const input = quantityContainer.querySelector('.GiaTri-input');
+                const cartId = quantityContainer.getAttribute('data-id');
+                let currentQuantity = parseInt(input.value);
+
+                // Nếu số lượng hiện tại là 1, và người dùng bấm trừ tiếp
+                if (currentQuantity <= 1) {
+                    const userConfirmed = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không?");
+
+                    if (userConfirmed) {
+                        // Nếu người dùng đồng ý, đặt số lượng là 0 và gửi đi server
+                        let newQuantity = 0;
+                        input.value = newQuantity; 
+                        updateCartQuantity(cartId, newQuantity);
+
+
+                        return;
+                    }
+                } else {
+                    // Nếu số lượng lớn hơn 1, chỉ cần trừ đi 1 như bình thường
+                    let newQuantity = currentQuantity - 1;
+                    input.value = newQuantity;
+                    updateCartQuantity(cartId, newQuantity);
+                }
+            });
+        });
+        });
+    </script>
+}

@@ -8,7 +8,7 @@ namespace project.ViewModels
 
         public int MaHangHoa { get; set; }
 
-        [MaxLength(50, ErrorMessage = "*Tên không được quá 50 ký tự")]
+        [MaxLength(100, ErrorMessage = "*Tên không được quá 50 ký tự")]
         [Required(ErrorMessage = "Tên hàng hóa không được để trống")]
         public string TenHh { get; set; }
 

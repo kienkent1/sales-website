@@ -1,0 +1,509 @@
+﻿@model project.ViewModels.UserVM
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    var Users = ViewBag.Users as IEnumerable<project.Data.KhachHang>;
+}
+
+@section Styles {
+    <style>
+        #btn-Huy {
+            border: 1px solid gray !important;
+        }
+
+            #btn-Huy:hover {
+                background-color: gray !important;
+                color: white !important;
+            }
+
+        #btn-Luu:hover {
+            background-color: green !important;
+            color: white !important;
+        }
+
+        #btn-Xoa:hover {
+            background-color: red !important;
+            color: white !important;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
+}
+
+
+<div class="container contact py-5 ">
+    <div class="container py-5">
+        <div class="p-5 bg-light rounded">
+            <div class="row g-4">
+                <div class="col-md-12 ">
+                    <div class="text-center mx-auto mb-3" style="max-width: 700px;">
+                        <h1 class="text-primary">Quản lý nhà cung cấp</h1>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <div class="col-md-5">
+                            <form id="UserForm" asp-controller="KhachHang" asp-action="AddOrEditTK" method="post" enctype="multipart/form-data">
+
+                                <div class="col-md-12 d-flex flex-column justify-content-center">
+                                    <div class="  d-flex gap-3">
+
+                                        <div class="col-md-11 ">
+
+
+
+                                            @if (TempData["ErrorMessage"] != null)
+                                            {
+                                                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                                            }
+                                            @if (TempData["SuccessMessage"] != null)
+                                            {
+                                                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                                            }
+                                            @if (TempData["ErrorMessage"] != null)
+                                            {
+                                                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                                            }
+
+                                            @if (ViewBag.CountUsersDeleted != null && (int)ViewBag.CountUsersDeleted > 0)
+                                            {
+                                                <a asp-controller="KhachHang" asp-action="GabageUsers" class="text-danger"><i class="bi bi-trash3-fill"></i> Có (@ViewBag.CountUsersDeleted) tài khoản</a>
+                                            }
+
+                                            @* username : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập tên đăng nhập</label>
+                                            @if(Model.MaKh == null)
+                                            {     
+                                                <input asp-for="@Model.MaKh" class="form-control border-0 py-3" placeholder="Nhập  username">      
+                                            }
+                                            else
+                                                {
+                                                    <input asp-for="@Model.MaKh" class="form-control border-0 py-3" disabled placeholder="Nhập  username">
+                                                }
+                                                <span asp-validation-for="@Model.MaKh" class="text-danger"></span>
+                                            </div>
+                                           
+                                            @* mật khẩu : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập mật khẩu</label>
+                                                <input asp-for="@Model.MatKhau" class="form-control border-0 py-3" placeholder="Nhập  mật khẩu">
+                                                <span asp-validation-for="@Model.MatKhau" class="text-danger"></span>
+                                            </div>
+
+                                            @* Họ tên : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập họ tên</label>
+                                                <input asp-for="@Model.HoTen" class="form-control border-0 py-3" placeholder="Nhập  họ tên">
+                                                <span asp-validation-for="@Model.HoTen" class="text-danger"></span>
+                                            </div>
+
+                                            @* email  : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập email</label>
+                                                <input asp-for="@Model.Email" class="form-control border-0 py-3" placeholder="Nhập email">
+                                                <span asp-validation-for="@Model.Email" class="text-danger"></span>
+                                            </div>
+
+                                            @* dien thoai  : *@
+                                            <div class="form-item mb-4 ">
+                                                <label class="form-label my-3">Nhập điện thoại</label>
+                                                <input asp-for="@Model.DienThoai" class="form-control border-0 py-3" placeholder="Nhập  số điện thoại">
+                                                <span asp-validation-for="@Model.DienThoai" class="text-danger"></span>
+                                            </div>
+
+                                            @* hinh *@
+                                            <div class="form-item mb-4  ">
+                                                <label class="form-label my-3">Tải ảnh</label>
+                                                <img id="hinhPreview" src="" alt="Xem trước hình ảnh" class="img-fluid rounded mb-3 mt-2" style="max-width: 200px; display: none;" />
+                                                <div class="input-group">
+                                                    <input asp-for="Hinh" type="file" class="form-control" accept="image/*" aria-describedby="inputGroupFileAddon04" id="Hinh" aria-label="Upload">
+                                                </div>
+
+                                                <span asp-validation-for="@Model.Hinh" class="text-danger"></span>
+
+                                            </div>
+
+                                            @* ngay sinh *@
+                                            <div class="form-item mb-4">
+                                                <label class="form-label my-3">Nhập ngày sinh</label>
+                                                <input asp-for="@Model.NgaySinh" class="form-control border-0 py-3">
+                                                <span asp-validation-for="@Model.NgaySinh" class="text-danger"></span>
+                                            </div>
+                                            @* dia chi  : *@
+                                            <div class="form-item mb-4">
+                                                <label class="form-label my-3">Nhập địa chỉ</label>
+                                                <textarea asp-for="@Model.DiaChi" type="text" class="form-control border-0 py-3" rows="8" placeholder="Nhập  địa chỉ"></textarea>
+                                                <span asp-validation-for="@Model.DiaChi" class="text-danger"></span>
+                                            </div>
+
+                                            @* các radio btn *@
+                                            <div class="d-flex gap-5">
+                                            @* giới tính *@
+                                            <div class="form-item mb-4">
+                                                <label class="form-label my-3">Giới tính</label>
+                                                    <input type="hidden" asp-for="@Model.GioiTinh" />
+                                            <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="radioGioiTinh" id="Nam" checked>
+                                                <label class="form-check-label" for="radioDefault1">
+                                                    Nam
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input  class="form-check-input" type="radio" name="radioGioiTinh" id="Nu" >
+                                                <label class="form-check-label" for="radioDefault2">
+                                                    Nữ
+                                                </label>
+                                            </div>
+                                            
+                                            </div>
+                                            @* role *@
+                                            <div class="form-item mb-4">
+                                                <label class="form-label my-3">Quyền hạn</label>
+                                                    <input type="hidden" asp-for="@Model.VaiTro" />
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="radioRole" id="Customer" checked>
+                                                        <label class="form-check-label" for="radioRole1">
+                                                            Khách hàng
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="radioRole" id="Admin">
+                                                        <label class="form-check-label" for="radioRole2">
+                                                            Quản trị viên
+                                                        </label>
+                                                    </div>
+                                                
+                                                </div>
+                                                @* hiệu lực *@
+                                                <div class="form-item mb-4">
+                                                    <label class="form-label my-3">Hiệu lực</label>
+                                                    <input type="hidden" asp-for="@Model.HieuLuc" />
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="radioHieuLuc" id="HoatDong" checked>
+                                                        <label class="form-check-label" for="radioHieuLuc1">
+                                                            Hoạt động
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="radioHieuLuc" id="Chan">
+                                                        <label class="form-check-label" for="radioHieuLuc2">
+                                                            Chặn
+                                                        </label>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            @* các nút cn *@
+                                            <div class="d-flex gap-3">
+                                                <button class="w-75 btn form-control btn-outline-success py-3 bg-white text-primary " id="btn-Luu" type="submit"><i class="bi bi-floppy-fill"></i> Lưu</button>
+                                                <button onclick="SorftDelete()" class="w-75 btn form-control btn-outline-danger py-3 bg-white text-danger " id="btn-Xoa" type="button"><i class="bi bi-trash3-fill"></i> Xóa</button>
+                                                <button class="w-75 btn form-control  py-3 bg-white text-dark " id="btn-Huy" type="button" onclick="resetForm()"><i class="bi bi-x-circle"></i> Hủy </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-7">
+                            <form asp-action="QuanLyTaiKhoan" asp-controller="KhachHang">
+                                <div class="input-group mb-4">
+                                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query" value="@ViewBag.CurrentQuery">
+                                    <button class="btn  btn-light border" type="submit">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            @* <div class="table-responsive"> *@
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Tài khoản</th>
+                                        <th scope="col">Họ tên</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Điện thoại</th>
+                                        <th scope="col">Địa chỉ</th>
+                                        <th scope="col">Giới tính</th>
+                                        <th scope="col">Quyền</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col">Hình</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (TempData["Message"] != null)
+                                    {
+                                        <tr>
+                                            <td colspan="9" class="text-center text-danger">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                @TempData["Message"]
+                                            </td>
+
+                                        </tr>
+
+
+                                    }
+                                    @if (Users != null)
+                                    {
+                                       
+                                        @foreach (var item in Users)
+                                        {
+                                            string hotenrg = item.HoTen;
+                                            string dienThoai = item.DienThoai;
+                                            string Emailrg = item.Email;
+                                            string? Diachirg = item.DiaChi;
+                                            bool CheckgioiTinh = item.GioiTinh;
+                                            string gioiTinh = CheckgioiTinh ? "Nam" : "Nữ";
+                                            string vaitro = item.VaiTro == 0 ? "Khách hàng" : "Quản trị viên";
+                                            string hieuLuc = item.HieuLuc ? "Hoạt động" : "Chặn";
+                                            if (!string.IsNullOrEmpty(Diachirg) && Diachirg.Length > 10)
+                                            {
+                                                Diachirg = Diachirg.Substring(0, 10) + "...";
+                                            }
+                                            if (!string.IsNullOrEmpty(Emailrg) && Emailrg.Length > 5)
+                                            {
+                                                Emailrg = Emailrg.Substring(0, 5) + "...";
+                                            }
+                                            if(!string.IsNullOrEmpty(dienThoai) && dienThoai.Length > 5)
+                                            {
+                                                dienThoai = dienThoai.Substring(0, 5) + "...";
+                                            }
+                                            if (!string.IsNullOrEmpty(hotenrg) && hotenrg.Length > 10)
+                                            {
+                                                hotenrg = hotenrg.Substring(0, 10) + "...";
+                                            }
+
+                                            <tr class="clickable-row" onclick="fillFormForEdit('@item.MaKh')">
+                                                <td>@item.MaKh</td>
+                                                <td>@hotenrg</td>
+                                                <td>@Emailrg</td>
+                                                <td>@dienThoai</td>
+                                                <td>@Diachirg</td>
+                                                <td>@gioiTinh</td>
+                                                <td>@vaitro</td>
+                                                <td>@hieuLuc</td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(item.Hinh))
+                                                    {
+                                                        <img src="~/Hinh/KhachHang/@item.Hinh" width="60" class="img-thumbnail" />
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+@section Scripts {
+   
+    <script>
+        // Hàm này sẽ chạy sau khi toàn bộ trang đã được tải
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // XỬ LÝ SỰ KIỆN THAY ĐỔI CHO RADIO BUTTON ---
+  
+
+            const radioGioiTinhs = document.querySelectorAll('input[name="radioGioiTinh"]');
+            const hiddenGioiTinh = document.getElementById('GioiTinh');
+
+            const radioRoles = document.querySelectorAll('input[name="radioRole"]');
+            const hiddenVaiTro = document.getElementById('VaiTro');
+
+            const radioHieulucs = document.querySelectorAll('input[name="radioHieuLuc"]');
+            const hiddenHieuLuc = document.getElementById('HieuLuc');
+
+            // Hàm cập nhật giá trị cho Giới Tính
+            function updateGioiTinhValue() {
+                
+                if (document.getElementById('Nam').checked) {
+                    hiddenGioiTinh.value = 'true'; 
+                } else {
+                    hiddenGioiTinh.value = 'false'; 
+                }
+
+            }
+
+            // Hàm cập nhật giá trị cho Vai Trò
+            function updateVaiTroValue() {
+                // Kiểm tra xem radio button 'Admin' có được chọn không
+                if (document.getElementById('Admin').checked) {
+                    hiddenVaiTro.value = 1; 
+                } else {
+                    hiddenVaiTro.value = 0; 
+                }
+
+            }
+            function updateHieuLucValue() {
+                // Kiểm tra xem radio button 'HoatDong' có
+                if (document.getElementById('HoatDong').checked) {
+                    hiddenHieuLuc.value = 'true';
+                } else {
+                    hiddenHieuLuc.value = 'false';
+                }
+
+            }
+            // Gán sự kiện 'change' cho nhóm radio Giới Tính
+            radioGioiTinhs.forEach(radio => {
+                radio.addEventListener('change', updateGioiTinhValue);
+            });
+
+            // Gán sự kiện 'change' cho nhóm radio Vai Trò
+            radioRoles.forEach(radio => {
+                radio.addEventListener('change', updateVaiTroValue);
+            });
+            radioHieulucs.forEach(radio => {
+                radio.addEventListener('change', updateHieuLucValue);
+            });
+
+            // Cập nhật giá trị ban đầu khi tải trang
+            updateGioiTinhValue();
+            updateVaiTroValue();
+            updateHieuLucValue();
+
+            // XỬ LÝ XEM TRƯỚC HÌNH ẢNH
+            const hinhInput = document.getElementById('Hinh');
+            const hinhPreview = document.getElementById('hinhPreview');
+
+            hinhInput.addEventListener('change', function (event) {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    hinhPreview.style.display = 'block';
+
+                    reader.onload = function (e) {
+                        hinhPreview.setAttribute('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    hinhPreview.setAttribute("src", "");
+                    hinhPreview.style.display = 'none';
+                }
+            });
+        });
+
+
+        //  ĐIỀN DỮ LIỆU VÀO FORM KHI CLICK VÀO HÀNG TRONG BẢNG ---
+
+        async function fillFormForEdit(userId) {
+            try {
+                // Sửa URL để gọi đúng action
+                const response = await fetch(`/KhachHang/GetTK?id=${userId}`);
+
+                if (!response.ok) {
+                    resetForm();
+                    throw new Error(`Không tìm thấy tài khoản hoặc có lỗi từ server. Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                document.getElementById('MaKh').value = data.maKh;
+                document.getElementById('MaKh').readOnly = true; // Không cho sửa Mã KH
+                document.getElementById('MatKhau').value = data.matKhau;
+                document.getElementById('HoTen').value = data.hoTen;
+                document.getElementById('Email').value = data.email;
+                document.getElementById('DienThoai').value = data.dienThoai;
+                document.getElementById('DiaChi').value = data.diaChi;
+                if (data.ngaySinh) {
+                    document.getElementById('NgaySinh').value = new Date(data.ngaySinh).toISOString().split('T')[0];
+                }
+                // Cập nhật radio button Giới Tính
+                if (data.gioiTinh === true) {
+                    document.getElementById('Nam').checked = true;
+                } else {
+                    document.getElementById('Nu').checked = true;
+                }
+                document.getElementById('GioiTinh').value = data.gioiTinh; // Cập nhật cả input ẩn
+
+                // Cập nhật radio button Vai Trò
+                if (data.vaiTro === 1) {
+                    document.getElementById('Admin').checked = true;
+                } else {
+                    document.getElementById('Customer').checked = true;
+                }
+                document.getElementById('VaiTro').value = data.vaiTro;
+
+                 // Cập nhật radio button hiệu lực
+                if (data.hieuLuc === true) {
+                    document.getElementById('HoatDong').checked = true;
+                } else {
+                    document.getElementById('Chan').checked = true;
+                }
+                document.getElementById('HieuLuc').value = data.hieuLuc;
+                // Hiển thị hình ảnh
+                const hinhPreview = document.getElementById('hinhPreview');
+                if (data.hinh) {
+                    hinhPreview.src = `/Hinh/KhachHang/${data.hinh}`;
+                    hinhPreview.style.display = 'block';
+                } else {
+                    hinhPreview.src = '';
+                    hinhPreview.style.display = 'none';
+                }
+
+                // Cuộn lên đầu trang để người dùng thấy form
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('Lỗi trong hàm fillFormForEdit:', error);
+                alert(error.message);
+            }
+        }
+
+        async function SorftDelete() {
+            const UserId = document.getElementById('MaKh').value;
+            if (confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
+                try {
+                         if (!UserId || UserId === null) {
+            alert("Vui lòng chọn một tài khoản từ danh sách trước khi xóa.");
+            return; // Dừng hàm lại
+        }
+                    const response = await fetch(`/KhachHang/DeleteSorftUser?id=${UserId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Không thể xóa tài khoản. Status: ${response.status}`);
+                    }
+                    // Xóa thành công, làm mới trang hoặc cập nhật giao diện
+                    alert("Tài khoản đã được xóa thành công.");
+                    location.reload(); // Làm mới trang để cập nhật danh sách sản phẩm
+                } catch (error) {
+                    console.error('Đã xảy ra lỗi trong hàm SorftDelete:', error);
+                    alert(error.message); // Hiển thị thông báo lỗi cho người dùng
+                }
+            }
+        }
+   
+        function resetForm() {
+            document.getElementById('UserForm').reset(); 
+
+            const maKhInput = document.getElementById('MaKh');
+            maKhInput.readOnly = false;
+
+            const hinhPreview = document.getElementById('hinhPreview');
+            hinhPreview.style.display = 'none';
+            hinhPreview.src = '';
+            
+
+            document.getElementById('Nam').checked = true;
+            document.getElementById('Customer').checked = true;
+            document.getElementById('GioiTinh').value = 'true';
+            document.getElementById('VaiTro').value = '0';
+        }
+
+    </script>
+}
+
+
+

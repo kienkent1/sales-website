@@ -139,7 +139,7 @@
                         <div class="col-md-7">
                             <form asp-action="Index" asp-controller="NhaCungCap">
                                 <div class="input-group mb-4">
-                                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query">
+                                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query" value="@ViewBag.CurrentQuery">
                                     <button class="btn  btn-light border" type="submit">
                                         <i class="fa fa-search"></i>
                                     </button>

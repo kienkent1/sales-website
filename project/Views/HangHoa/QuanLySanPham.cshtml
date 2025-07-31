@@ -152,7 +152,7 @@
                         <div class="col-md-7">
                             <form asp-action="QuanLySanPham" asp-controller="HangHoa">
                             <div class="input-group mb-4">
-                                <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query">
+                                    <input type="search" class="form-control " placeholder="Tìm kiếm" aria-describedby="search-icon-1" name="query" value="@ViewBag.CurrentQuery">
                                 <button class="btn  btn-light border">
                                     <i class="fa fa-search"></i>
                                 </button>

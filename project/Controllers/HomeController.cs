@@ -18,6 +18,7 @@ namespace project.Controllers
         {
             return View();
         }
+  
         [Route("/404")]
         public IActionResult pageNotFound()
         {

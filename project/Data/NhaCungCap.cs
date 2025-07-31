@@ -21,10 +21,11 @@ public partial class NhaCungCap
 
     public string? MoTa { get; set; }
 
-    public string? Slug { get; set; }
-
     public bool? Deleted { get; set; }
 
     public DateTime? DeletedAt { get; set; }
+
+    public string? Slug { get; set; }
+
     public virtual ICollection<HangHoa> HangHoas { get; set; } = new List<HangHoa>();
 }

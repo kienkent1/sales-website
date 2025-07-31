@@ -3,6 +3,13 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
+@section Styles {
+    <style>
+        .btn-gg:hover {
+            background-color: lightgray;
+        }
+    </style>
+}
 <div class="container pt-5">
     <div class="row justify-content-center pt-4">
         <div class="col-md-8 col-lg-6 pt-5">
@@ -31,7 +38,10 @@
                 @* Nút Submit *@
                 <div class="d-grid mt-4">
                     <!-- d-grid giúp button chiếm toàn bộ chiều rộng -->
-                    <button type="submit" class="btn btn-success">Đăng nhập</button>
+                    <button type="submit" class="btn btn-success mb-3">Đăng nhập</button>
+                    <a class="btn-gg text-dark  border  p-1 rounded text-center" asp-controller="KhachHang" asp-action="loginByGoogle">
+                        <img src="~/img/gg_logo.png" alt="Avatar" style="width: 30px; height: 30px; border-radius: 50%;" />
+                        Đăng nhập bằng Google</a>
                 </div>
             </form>
 

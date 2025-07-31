@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<project.ViewModels.MenuLoai>
 @{
     var DSCty = ViewBag.DSCty as IEnumerable<project.Data.NhaCungCap>;
+    var currentLoai = ViewData["CurrentLoai"] as string;
+    var currentBrand = ViewData["CurrentNCC"] as string;
 }
 
 <div class="col-lg-12">
@@ -12,7 +14,8 @@
                 <li>
                 <div class="d-flex justify-content-between fruite-name">
 
-                        <a asp-controller="HangHoa" asp-action="Index" asp-route-loai="@item.MaLoai">
+                        <a asp-controller="HangHoa" asp-action="Index" asp-route-loai="@item.slug">
+                            >
                             <img src="~/Hinh/Loai/@item.Hinh" class="rounded-circle"  style="width: 25px; height: 25px; object-fit: cover;">
                             @item.TenLoai
                     </a>
@@ -43,7 +46,7 @@
             @foreach (var item in DSCty)
             {
                 <li class="mb-3 ">
-                    <a asp-controller="HangHoa" asp-action="Index" asp-route-NCC="@item.MaNcc" class="d-flex justify-content-center align-items-center p-2 border rounded-3 logo-Cty">
+                    <a asp-controller="HangHoa" asp-action="Index" asp-route-brand="@item.Slug"  asp-route-Loai="@currentLoai" class="d-flex justify-content-center align-items-center p-2 border rounded-3 logo-Cty">
 
                         <img src="~/Hinh/NhaCC/@item.Logo" alt="Logo @item.TenCongTy" style="height: 40px; width: auto; object-fit: contain;">
 

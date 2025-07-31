@@ -1,4 +1,4 @@
-USE [master]
+﻿USE [master]
 GO
 /****** Object:  Database [Hshop2023]    Script Date: 21/07/2025 9:02:10 CH ******/
 CREATE DATABASE [Hshop2023]
@@ -117,7 +117,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[HangHoa](
 	[MaHH] [int] IDENTITY(1,1) NOT NULL,
-	[TenHH] [nvarchar](50) NOT NULL,
+	[TenHH] [nvarchar](100) NOT NULL,
 	[TenAlias] [nvarchar](200) NULL,
 	[MaLoai] [int] NOT NULL,
 	[MoTaDonVi] [nvarchar](50) NULL,
@@ -137,6 +137,16 @@ CREATE TABLE [dbo].[HangHoa](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+create table MaGiamGia(
+MaGG nvarchar(100) not null,
+Loai nvarchar(50) not null,
+GiamGia float not null,
+SoLuong int null,
+HetHan datetime null,
+)
+
+
 /****** Object:  View [dbo].[vChiTietHoaDon]    Script Date: 21/07/2025 9:02:11 CH ******/
 SET ANSI_NULLS ON
 GO
@@ -255,7 +265,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[KhachHang](
-	[MaKH] [nvarchar](20) NOT NULL,
+	[MaKH] [nvarchar](50) NOT NULL,
 	[MatKhau] [nvarchar](50) NULL,
 	[HoTen] [nvarchar](50) NOT NULL,
 	[GioiTinh] [bit] NOT NULL,
@@ -263,16 +273,19 @@ CREATE TABLE [dbo].[KhachHang](
 	[DiaChi] [nvarchar](60) NULL,
 	[DienThoai] [nvarchar](24) NULL,
 	[Email] [nvarchar](50) NOT NULL,
-	[Hinh] [nvarchar](50) NULL,
+	[Hinh] [nvarchar](200) NULL,
 	[HieuLuc] [bit] NOT NULL,
 	[VaiTro] [int] NOT NULL,
 	[RandomKey] [varchar](50) NULL,
+	Deleted bit null,
+	DeletedAt datetime null
  CONSTRAINT [PK_Customers] PRIMARY KEY CLUSTERED 
 (
 	[MaKH] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
 /****** Object:  Table [dbo].[Loai]    Script Date: 21/07/2025 9:02:11 CH ******/
 SET ANSI_NULLS ON
 GO
@@ -316,6 +329,16 @@ CREATE TABLE [dbo].[NhaCungCap](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+/*****Giỏ hàng******/
+create table GioHang(
+MaGH int primary key identity(1,1),
+MaKH nvarchar(20) not null,
+SoLuong int not null,
+MaHH int not null,
+
+FOREIGN key (MaKH) REFERENCES KhachHang(MaKH),
+foreign key (MaHH) references HangHoa(MaHH)
+)
 /****** Object:  Table [dbo].[NhanVien]    Script Date: 21/07/2025 9:02:11 CH ******/
 SET ANSI_NULLS ON
 GO

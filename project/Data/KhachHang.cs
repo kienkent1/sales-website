@@ -29,7 +29,13 @@ public partial class KhachHang
 
     public string? RandomKey { get; set; }
 
+    public bool? Deleted { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
     public virtual ICollection<BanBe> BanBes { get; set; } = new List<BanBe>();
+
+    public virtual ICollection<GioHang> GioHangs { get; set; } = new List<GioHang>();
 
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 

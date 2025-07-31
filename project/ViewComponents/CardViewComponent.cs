@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using project.Data;
 using project.Helpers;
 using project.ViewModels;
 
@@ -6,14 +8,36 @@ namespace project.ViewComponents
 {
     public class CardViewComponent : ViewComponent
     {
-        public IViewComponentResult Invoke()
+        private readonly Hshop2023Context _db; 
+
+   
+        public CardViewComponent(Hshop2023Context db)
         {
-            var count = HttpContext.Session.Get<List<CartItem>>(MySetting.CART_KEY) ?? new List<CartItem>();
-            return View("CardPanel",new CardModel
+            _db = db;
+        }
+
+ 
+        public async Task<IViewComponentResult> InvokeAsync()
+        {
+            var customerId = HttpContext.User.Claims.SingleOrDefault(c => c.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+
+            CardModel cardModel=new CardModel();
+
+            if (!string.IsNullOrEmpty(customerId))
             {
-                Quality = count.Sum(x => x.SoLuong),
-                Total = count.Sum(x => x.ThanhTien)
-            });
+                var cartItemsFromDb = _db.GioHangs
+                                         .AsNoTracking() 
+                                         .Where(gh => gh.MaKh == customerId);
+
+                cardModel = new CardModel
+                {
+                    Soluong = await cartItemsFromDb.SumAsync(gh => gh.SoLuong),
+
+                    Total = (double)(decimal)await cartItemsFromDb.SumAsync(gh => gh.SoLuong * (gh.MaHhNavigation.DonGia ?? 0))
+                };
+            }
+
+            return View("CardPanel", cardModel);
         }
     }
 }

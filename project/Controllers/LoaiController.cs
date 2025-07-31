@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using project.Data;
+using project.Helpers;
 using project.ViewModels;
 using System.Text.RegularExpressions;
 
@@ -14,14 +16,14 @@ namespace project.Controllers
 
         private readonly Hshop2023Context db;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        public LoaiController(Hshop2023Context context, IMapper mapper, IWebHostEnvironment webHostEnvironment)
+        private readonly Util _util;
+        public LoaiController(Hshop2023Context context, IMapper mapper, Util util)
         {
             db = context;
             _mapper = mapper;
-            _webHostEnvironment = webHostEnvironment;
+            _util= util;
         }
-
+        [Authorize(Roles = "1,2")]
         public IActionResult Index(string? query)
         {
             List<Loai> loai;
@@ -34,7 +36,7 @@ namespace project.Controllers
             }
             else
             {
-                var LoaiTimKiem = GenerateAlias(null, query);
+                var LoaiTimKiem = Helpers.Util.GenerateAlias(null, query);
                 loai = db.Loais
                     .Where(p => p.Deleted != true && p.TenLoaiAlias != null && p.TenLoaiAlias.Contains(LoaiTimKiem))
                     .OrderByDescending(p => p.MaLoai)
@@ -48,63 +50,15 @@ namespace project.Controllers
             var ListLoais= db.Loais.Where(p => p.Deleted == true).Count();
             ViewBag.CountLoaisDeleted = ListLoais;
             ViewBag.Loai = loai;
-
+            ViewBag.CurrentQuery = query;
             var viewModel = new LoaiVM();
       
             return View(viewModel);
         }
 
-        private string GenerateAlias(int? id, string Loai)
-        {
-            if (string.IsNullOrEmpty(Loai))
-            {
-                return "";
-            }
-
-            string chuoiDaChuanHoa = Loai.Normalize(System.Text.NormalizationForm.FormD);
-
-            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
-
-            string tenKhongDauDaSua = tenKhongDau.Replace("đ", "d").Replace("Đ", "d");
-
-            string alias = tenKhongDauDaSua.ToLower().Replace(" ", "-");
-
-            alias = Regex.Replace(alias, @"[^a-z0-9-]", "");
-
-            if (id.HasValue)
-            {
-                return $"{id.Value}-{alias}";
-            }
-
-            return alias;
-
-        }
-        private string GenerateSlug(string Loai)
-        {
-            if (string.IsNullOrEmpty(Loai))
-            {
-                return "";
-            }
-
-            string chuoiDaChuanHoa = Loai.Normalize(System.Text.NormalizationForm.FormD);
-
-            //bỏ dấu
-            string tenKhongDau = Regex.Replace(chuoiDaChuanHoa, @"\p{M}", string.Empty);
-
-            string slug = tenKhongDau.Replace("đ", "d").Replace("Đ", "D");
-
-            //bỏ các ký tự đặc biệt không hợp lệ
-            slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
-
-            //chuyên thành chữ thường, thay thế khoảng trắng bằng gạch ngang
-            slug = Regex.Replace(slug.ToLower().Trim(), @"\s+", "-");
-
-            slug = Regex.Replace(slug, @"-+", "-"); // Thay thế nhiều gạch ngang bằng một
-            slug = slug.Trim('-'); // Xóa gạch ngang ở đầu và cuối
-
-            return slug;
-        }
-
+        
+    
+        
         public IActionResult GetLoai(int id)
         {
             var loai = db.Loais.AsNoTracking().FirstOrDefault(p => p.MaLoai == id);
@@ -156,7 +110,7 @@ namespace project.Controllers
                     // Xử lý upload file (nếu có)
                     if (model.Hinh != null && model.Hinh.Length > 0)
                     {
-                        newLoai.Hinh = await UploadImage(model.Hinh, "Loai");
+                        newLoai.Hinh = await _util.UploadImage(model.Hinh, "Loai");
                     }
 
                     newLoai.Deleted = false;
@@ -166,8 +120,8 @@ namespace project.Controllers
                     await db.SaveChangesAsync();
 
                     // Tạo TenAlias sau khi đã có MaHh
-                    newLoai.TenLoaiAlias = GenerateAlias(newLoai.MaLoai, newLoai.TenLoai);
-                    newLoai.Slug = GenerateSlug(newLoai.TenLoai);
+                    newLoai.TenLoaiAlias = Helpers.Util.GenerateAlias(newLoai.MaLoai, newLoai.TenLoai);
+                    newLoai.Slug = Helpers.Util.GenerateSlug(newLoai.TenLoai);
                     db.Update(newLoai);
                     await db.SaveChangesAsync(); // Lưu lần 2 để cập nhật TenAlias
 
@@ -193,7 +147,7 @@ namespace project.Controllers
                     // Xử lý upload file (nếu có)
                     if (model.Hinh != null && model.Hinh.Length > 0)
                     {
-                        loaiToUpdate.Hinh = await UploadImage(model.Hinh, "Loai");
+                        loaiToUpdate.Hinh = await _util.UploadImage(model.Hinh, "Loai");
                         // (Tùy chọn) Xóa file ảnh cũ nếu cần
                     }
                     else
@@ -202,8 +156,8 @@ namespace project.Controllers
                     }
 
                     // Cập nhật TenAlias
-                    loaiToUpdate.TenLoaiAlias = GenerateAlias(loaiToUpdate.MaLoai, loaiToUpdate.TenLoai);
-                    loaiToUpdate.Slug = GenerateSlug(loaiToUpdate.TenLoai);
+                    loaiToUpdate.TenLoaiAlias = Helpers.Util.GenerateAlias(loaiToUpdate.MaLoai, loaiToUpdate.TenLoai);
+                    loaiToUpdate.Slug = Helpers.Util.GenerateSlug(loaiToUpdate.TenLoai);
                     // Chỉ cần gọi Update và SaveChanges một lần duy nhất
                     db.Update(loaiToUpdate);
                     await db.SaveChangesAsync();
@@ -243,20 +197,9 @@ namespace project.Controllers
             }
 
         }
-        private async Task<string> UploadImage(IFormFile file, string TenFolder)
-        {
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Hinh", TenFolder);
-            Directory.CreateDirectory(uploadsFolder);
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(file.FileName);
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return uniqueFileName;
-        }
 
 
+        [Authorize(Roles = "1,2")]
         public IActionResult GabageLoai(string? query)
         {
             var deletedLoais = new List<Loai>();
@@ -269,7 +212,7 @@ namespace project.Controllers
             }
             else
             {
-                var LoaiTimKiem = GenerateAlias(null, query);
+                var LoaiTimKiem = Helpers.Util.GenerateAlias(null, query);
                 deletedLoais = db.Loais
                .Where(p => p.Deleted == true)
                .Where(p => p.TenLoaiAlias != null && p.TenLoaiAlias.Contains(LoaiTimKiem))
