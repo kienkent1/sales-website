@@ -11,8 +11,6 @@ public partial class HoaDon
 
     public DateTime NgayDat { get; set; }
 
-    public DateTime? NgayCan { get; set; }
-
     public DateTime? NgayGiao { get; set; }
 
     public string? HoTen { get; set; }
@@ -33,7 +31,13 @@ public partial class HoaDon
 
     public string? SoDienThoai { get; set; }
 
+    public string? MaGiamGia { get; set; }
+
+    public double? TongTien { get; set; }
+
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
+
+    public virtual MaGiamGium? MaGiamGiaNavigation { get; set; }
 
     public virtual KhachHang MaKhNavigation { get; set; } = null!;
 

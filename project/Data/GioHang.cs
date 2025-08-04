@@ -13,6 +13,8 @@ public partial class GioHang
 
     public int MaHh { get; set; }
 
+    public bool? DatHang { get; set; }
+
     public virtual HangHoa MaHhNavigation { get; set; } = null!;
 
     public virtual KhachHang MaKhNavigation { get; set; } = null!;

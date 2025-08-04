@@ -15,8 +15,6 @@ public partial class Hshop2023Context : DbContext
     {
     }
 
-    public virtual DbSet<BanBe> BanBes { get; set; }
-
     public virtual DbSet<ChiTietHd> ChiTietHds { get; set; }
 
     public virtual DbSet<ChuDe> ChuDes { get; set; }
@@ -61,32 +59,6 @@ public partial class Hshop2023Context : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<BanBe>(entity =>
-        {
-            entity.HasKey(e => e.MaBb).HasName("PK_Promotions");
-
-            entity.ToTable("BanBe");
-
-            entity.Property(e => e.MaBb).HasColumnName("MaBB");
-            entity.Property(e => e.Email).HasMaxLength(50);
-            entity.Property(e => e.HoTen).HasMaxLength(50);
-            entity.Property(e => e.MaHh).HasColumnName("MaHH");
-            entity.Property(e => e.MaKh)
-                .HasMaxLength(20)
-                .HasColumnName("MaKH");
-            entity.Property(e => e.NgayGui)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
-            entity.HasOne(d => d.MaHhNavigation).WithMany(p => p.BanBes)
-                .HasForeignKey(d => d.MaHh)
-                .HasConstraintName("FK_QuangBa_HangHoa");
-
-            entity.HasOne(d => d.MaKhNavigation).WithMany(p => p.BanBes)
-                .HasForeignKey(d => d.MaKh)
-                .HasConstraintName("FK_BanBe_KhachHang");
-        });
-
         modelBuilder.Entity<ChiTietHd>(entity =>
         {
             entity.HasKey(e => e.MaCt).HasName("PK_OrderDetails");
@@ -228,15 +200,15 @@ public partial class Hshop2023Context : DbContext
             entity.Property(e => e.DiaChi).HasMaxLength(60);
             entity.Property(e => e.GhiChu).HasMaxLength(50);
             entity.Property(e => e.HoTen).HasMaxLength(50);
+            entity.Property(e => e.MaGiamGia)
+                .HasMaxLength(100)
+                .HasColumnName("maGiamGia");
             entity.Property(e => e.MaKh)
                 .HasMaxLength(20)
                 .HasColumnName("MaKH");
             entity.Property(e => e.MaNv)
                 .HasMaxLength(50)
                 .HasColumnName("MaNV");
-            entity.Property(e => e.NgayCan)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
             entity.Property(e => e.NgayDat)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -244,6 +216,10 @@ public partial class Hshop2023Context : DbContext
                 .HasDefaultValueSql("(((1)/(1))/(1900))")
                 .HasColumnType("datetime");
             entity.Property(e => e.SoDienThoai).HasMaxLength(24);
+
+            entity.HasOne(d => d.MaGiamGiaNavigation).WithMany(p => p.HoaDons)
+                .HasForeignKey(d => d.MaGiamGia)
+                .HasConstraintName("FK__HoaDon__maGiamGi__51300E55");
 
             entity.HasOne(d => d.MaKhNavigation).WithMany(p => p.HoaDons)
                 .HasForeignKey(d => d.MaKh)
@@ -322,13 +298,13 @@ public partial class Hshop2023Context : DbContext
 
         modelBuilder.Entity<MaGiamGium>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => e.MaGg).HasName("PK__MaGiamGi__2725AE82FCDCD067");
 
-            entity.Property(e => e.HetHan).HasColumnType("datetime");
-            entity.Property(e => e.Loai).HasMaxLength(50);
             entity.Property(e => e.MaGg)
                 .HasMaxLength(100)
                 .HasColumnName("MaGG");
+            entity.Property(e => e.HetHan).HasColumnType("datetime");
+            entity.Property(e => e.Loai).HasMaxLength(50);
         });
 
         modelBuilder.Entity<NhaCungCap>(entity =>

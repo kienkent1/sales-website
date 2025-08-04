@@ -38,6 +38,12 @@ namespace project.Helpers
             .ForMember(dest => dest.RandomKey, opt => opt.Ignore())
             // (Tùy chọn) Bỏ qua cả việc map ảnh, vì chúng ta sẽ xử lý nó thủ công
             .ForMember(dest => dest.Hinh, opt => opt.Ignore());
+
+            CreateMap<GioHang, CartItem>()
+                .ForMember(dest => dest.TenHangHoa, opt => opt.MapFrom(src => src.MaHhNavigation.TenHh))
+                .ForMember(dest => dest.DonGia, opt => opt.MapFrom(src => src.MaHhNavigation.DonGia ?? 0)) 
+                .ForMember(dest => dest.HinhAnh, opt => opt.MapFrom(src => src.MaHhNavigation.Hinh ?? string.Empty))
+                .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.MaHhNavigation.Slug));
         }
     }
     

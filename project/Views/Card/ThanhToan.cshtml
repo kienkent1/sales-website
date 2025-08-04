@@ -1,196 +1,316 @@
-﻿@model IEnumerable<project.ViewModels.CartItem>
+﻿@model project.ViewModels.CheckOutVM
 @{
     ViewData["Title"] = "Thanh Toán";
+    var tongTienHang = Model.CartItems.Sum(p => p.ThanhTien);
 }
 
-<!-- Single Page Header start -->
+<!-- Header -->
 <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Checkout</h1>
     <ol class="breadcrumb justify-content-center mb-0">
-        <li class="breadcrumb-item"><a href="#">Home</a></li>
-        <li class="breadcrumb-item"><a href="#">Pages</a></li>
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
         <li class="breadcrumb-item active text-white">Checkout</li>
     </ol>
 </div>
-<!-- Single Page Header End -->
-<!-- Checkout Page Start -->
+
 <div class="container-fluid py-5">
     <div class="container py-5">
-        <h1 class="mb-4">Billing details</h1>
-       
+        <h1 class="mb-4">Đặt hàng</h1>
+
+        <form id="checkout-form" asp-action="ThanhToan" asp-controller="Card" method="post">
+           
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
             <div class="row g-5">
-                <form asp-action="ThanhToan" asp-controller="Card">
-                    <div class="col-md-12 col-lg-6 col-xl-7">
-                        @* check *@  
-                           <div class="form-check my-3">
-                            <input type="checkbox" class="form-check-input" name="GiongKhachHang" id="GiongKhachHang" value="false">
-                        <label class="form-check-label" for="GiongKhachHang">Giống thông tin khách hàng?</label>
-                        </div>
-                        @* Tên người nhận *@  
-                         <div class="form-item delivery-info">
-                            <label class="form-label my-3">Người nhận hàng<sup>*</sup></label>
-                        <input type="text" name="HoTen" class="form-control">
-                        </div>
-                        @* Địa chỉ giao hàng *@  
-                         <div class="form-item delivery-info">
-                            <label class="form-label my-3">Địa chỉ <sup>*</sup></label>
-                        <input type="text" name="DiaChi" class="form-control" />
-                        </div>
-                        @* điện thoại *@  
-                          <div class="form-item delivery-info">
-                            <label class="form-label my-3">Điện thoại<sup>*</sup></label>
-                        <input type="text" name="DienThoai" class="form-control">
-                        </div>
-
-                        <hr>
-
-                        <div class="form-item">
-                            <textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Ghi chú"></textarea>
-                        </div>
-                        @* btn đặt hàng *@
-                        <div class="row align-items-center justify-content-center pt-4">
-                            <button type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Đặt hàng</button>
-                        </div>
-                    <div id="paypal-button-container" class="mt-4"></div>
+                <div class="col-md-12 col-lg-7">
+                    <h4 class="mb-4">Thông tin giao hàng</h4>
+                    <div class="form-item">
+                        <label asp-for="HoTen" class="form-label my-3">Người nhận hàng<sup>*</sup></label>
+                        <input asp-for="HoTen" class="form-control">
+                        <span asp-validation-for="HoTen" class="text-danger"></span>
                     </div>
-                </form>
-                <div class="col-md-12 col-lg-6 col-xl-5">
+                    <div class="form-item">
+                        <label asp-for="DiaChi" class="form-label my-3">Địa chỉ<sup>*</sup></label>
+                        <input asp-for="DiaChi" class="form-control" />
+                        <span asp-validation-for="DiaChi" class="text-danger"></span>
+                    </div>
+                    <div class="form-item">
+                        <label asp-for="SoDienThoai" class="form-label my-3">Điện thoại<sup>*</sup></label>
+                        <input asp-for="SoDienThoai" class="form-control">
+                        <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item">
+                        <label asp-for="maGiamGia" class="form-label my-3">Mã giảm giá<sup>*</sup></label>
+                        <input asp-for="maGiamGia" class="form-control">
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h4 class="mb-4">Vận chuyển & Thanh toán</h4>
+                    <div class="form-item">
+                        <label asp-for="CachVanChuyen" class="form-label my-3">Phương thức vận chuyển<sup>*</sup></label>
+                        <select asp-for="CachVanChuyen" class="form-select">
+                            <option value="TruyenThong">Giao hàng truyền thống</option>
+                            <option value="SieuToc">Giao hàng siêu tốc</option>
+                        </select>
+                        <span asp-validation-for="CachVanChuyen" class="text-danger"></span>
+                        <div id="PhiVanChuyenSpan" class="mt-2 text-muted"><i class="bi bi-truck"></i> Phí vận chuyển là $1.00</div>
+                    </div>
+
+                    <div class="form-item">
+                        <label asp-for="CachThanhToan" class="form-label my-3">Cách thanh toán<sup>*</sup></label>
+                        <select asp-for="CachThanhToan" class="form-select">
+                            <option value="Thanh toán khi nhận hàng">Thanh toán khi nhận hàng (COD)</option>
+                            <option value="Thanh toán qua Paypal">Thanh toán qua Paypal</option>
+                        </select>
+                        <span asp-validation-for="CachThanhToan" class="text-danger"></span>
+                    </div>
+
+                    @* Input ẩn để lưu giá trị phí vận chuyển *@
+                    <input type="hidden" asp-for="PhiVanChuyen" />
+
+                    <hr class="my-4">
+                    <div class="form-item">
+                        <label asp-for="GhiChu" class="form-label my-3">Ghi chú (tùy chọn)</label>
+                        <textarea asp-for="GhiChu" class="form-control" spellcheck="false" cols="30" rows="4" placeholder="Ghi chú về đơn hàng..."></textarea>
+                    </div>
+                </div>
+
+                <div class="col-md-12 col-lg-5">
                     <div class="table-responsive">
+                        <!-- Bảng hiển thị sản phẩm giữ nguyên như bạn đã có -->
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Products</th>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Quantity</th>
-                                    <th scope="col">Total</th>
+                                    <th scope="col">Sản phẩm</th>
+                                    <th scope="col">Tên</th>
+                                    <th scope="col">Giá</th>
+                                    <th scope="col">SL</th>
+                                    <th scope="col">Tổng</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var item in Model)
+                                @foreach (var item in Model.CartItems)
                                 {
                                     <tr>
                                         <th scope="row">
                                             <div class="d-flex align-items-center mt-2">
-                                                <img src="/Hinh/HangHoa/@item.HinhAnh" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="">
+                                                <img src="/Hinh/HangHoa/@item.HinhAnh" class="img-fluid rounded-circle" style="width: 60px; height: 60px;" alt="">
                                             </div>
                                         </th>
-                                        <td class="py-5">@item.TenHangHoa</td>
-                                        <td class="py-5">$@item.DonGia</td>
-                                        <td class="py-5">@item.SoLuong</td>
-                                        <td class="py-5">$@item.ThanhTien</td>
-
+                                        <td class="py-4">@item.TenHangHoa</td>
+                                        <td class="py-4">$@item.DonGia.ToString("N2")</td>
+                                        <td class="py-4">@item.SoLuong</td>
+                                        <td class="py-4">$@item.ThanhTien.ToString("N2")</td>
                                     </tr>
-
                                 }
-
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="3"></td>
-                                    <td class="py-5">
-                                        <p class="mb-0 text-dark py-3">Subtotal</p>
+                                    <td class="py-3">
+                                        <p class="mb-0 text-dark">Tổng tiền hàng</p>
                                     </td>
-                                    <td class="py-5">
-                                        <div class="py-3 border-bottom border-top">
-                                            <p class="mb-0 text-dark">$ @Model.Sum(p => p.ThanhTien).ToString("#,##0.00")</p>
+                                    <td class="py-3">
+                                        <p class="mb-0 text-dark" id="subtotal-display">$ @tongTienHang.ToString("N2")</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="py-3">
+                                        <p class="mb-0 text-dark">Phí vận chuyển</p>
+                                    </td>
+                                    <td class="py-3">
+                                        <p class="mb-0 text-dark" id="shipping-fee-display">$1.00</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" colspan="3" class="border-bottom-0"></th>
+                                    <td class="py-3">
+                                        <p class="mb-0 text-dark text-uppercase">TỔNG CỘNG</p>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="py-3 border-top">
+                                            <p class="mb-0 text-dark h5" id="total-amount-display">$ @(tongTienHang + 1).ToString("N2")</p>
                                         </div>
                                     </td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-         </div>
+                    <div class="row g-4 text-center align-items-center justify-content-center pt-4">
+                        <button type="submit" id="btnPlaceOrder" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Đặt hàng</button>
+                        <div id="paypal-button-container" class="mt-2" style="display: none;"></div>
+                    </div>
+                </div>
             </div>
-        
+        </form>
     </div>
 </div>
-<!-- Checkout Page End -->
-@section Scripts{
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.paypalClientId&components=buttons"></script>
 
     <script>
-                 $(document).ready(function ()
-        {
-            $("#GiongKhachHang").change(function(){
-                if($(this).prop("checked")){
-                    $(this).val(true);
-                    $(".delivery-info").addClass("d-none");
-                }
-                else{
-                    $(this).val(false);
-                     $(".delivery-info").removeClass("d-none");
-                }
-            });
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const shippingMethodSelect = document.getElementById('CachVanChuyen');
+            const shippingFeeInput = document.getElementById('PhiVanChuyen');
+            const shippingFeeSpan = document.getElementById('PhiVanChuyenSpan');
+            const shippingFeeDisplay = document.getElementById('shipping-fee-display');
+            const subtotal = parseFloat('@tongTienHang');
+            const totalAmountDisplay = document.getElementById('total-amount-display');
 
-                paypal.Buttons({
+            const paymentMethodSelect = document.getElementById('CachThanhToan');
+            const placeOrderButton = document.getElementById('btnPlaceOrder');
+            const paypalContainer = document.getElementById('paypal-button-container');
+
+            function updateShippingFee() {
+                const selectedMethod = shippingMethodSelect.value;
+                let fee = 1.00;
+                let feeText = 'Phí vận chuyển là $1.00';
+
+                if (selectedMethod === 'SieuToc') {
+                    fee = 2.00;
+                    feeText = 'Phí vận chuyển là $2.00';
+                }
+
+                shippingFeeInput.value = fee;
+                shippingFeeSpan.innerHTML = `<i class="bi bi-truck"></i> ${feeText}`;
+                shippingFeeDisplay.innerText = `$${fee.toFixed(2)}`;
+
+                const newTotal = subtotal + fee;
+                totalAmountDisplay.innerText = `$${newTotal.toFixed(2)}`;
+            }
+
+            function togglePaymentView() {
+                const selectedMethod = paymentMethodSelect.value;
+                if (selectedMethod === 'Thanh toán qua Paypal') {
+                    placeOrderButton.style.display = 'none';
+                    paypalContainer.style.display = 'block';
+                } else {
+                    placeOrderButton.style.display = 'block';
+                    paypalContainer.style.display = 'none';
+                }
+            }
+
+            // Initial setup
+            updateShippingFee();
+            togglePaymentView();
+
+            // Event listeners
+            shippingMethodSelect.addEventListener('change', updateShippingFee);
+            paymentMethodSelect.addEventListener('change', togglePaymentView);
+
+            // PayPal logic
+                           paypal.Buttons({
                style: {
-          shape: 'pill', // Có thể thêm các style khác
+          shape: 'pill', 
         layout: 'vertical',
         color: 'gold',
         label: 'paypal'
         },
 
-                 async createOrder(data, actions) {
+                     async createOrder(data, actions) {
+
+            const shippingMethod = document.getElementById('CachVanChuyen').value;
+
             try {
-                const response = await fetch("/Card/create-paypal-order", {
-                    method: "POST", // Sử dụng POST thay cho "post" để đồng nhất
+                const response = await fetch("/GioHang/create-paypal-order", {
+                    method: "POST",
                     headers: {
-                        // Thêm header này để đảm bảo server hiểu request
                         "Content-Type": "application/json",
-                    }
+                    },
+                   
+                    body: JSON.stringify({ cachVanChuyen: shippingMethod })
                 });
 
-                // Nếu response không OK, phân tích lỗi và throw
                 if (!response.ok) {
                     const errorData = await response.json();
-                    // Ném ra một lỗi với thông điệp từ server
                     throw new Error(errorData.message || 'Lỗi không xác định từ server.');
                 }
 
                 const order = await response.json();
-
-                // Trả về ID của đơn hàng
                 return order.id;
 
             } catch (error) {
                 console.error("Lỗi khi tạo đơn hàng PayPal:", error);
                 alert("Không thể tạo đơn hàng. Vui lòng thử lại. Lỗi: " + error.message);
-                // return Promise.reject(error); // Báo lỗi cho PayPal SDK
             }
         },
 
-        // Chuyển đổi onApprove sang async/await VÀ SỬA LẠI CHO ĐÚNG
-               async onApprove(data, actions) {
+                        async onApprove(data, actions) {
+   
+
+            // Lấy thẻ form để lấy token
+            const formElement = document.getElementById('checkout-form');
+            if (!formElement) {
+                alert("Lỗi nghiêm trọng: Không tìm thấy form thanh toán (id='checkout-form').");
+                return;
+            }
+
+            // Kiểm tra validation của jQuery
+            if ($(formElement).valid() === false) {
+                alert('Vui lòng điền đầy đủ các thông tin giao hàng bắt buộc.');
+                return;
+            }
+
+            // === THAY ĐỔI QUAN TRỌNG: THU THẬP DỮ LIỆU THỦ CÔNG ===
+            // Cách này rõ ràng và ít bị lỗi hơn FormData
+            const checkoutData = {
+                HoTen: document.getElementById('HoTen').value,
+                DiaChi: document.getElementById('DiaChi').value,
+                SoDienThoai: document.getElementById('SoDienThoai').value,
+                CachVanChuyen: document.getElementById('CachVanChuyen').value,
+                CachThanhToan: document.getElementById('CachThanhToan').value,
+                PhiVanChuyen: document.getElementById('PhiVanChuyen').value,
+                GhiChu: document.getElementById('GhiChu').value,
+                // Lấy token từ input ẩn
+                __RequestVerificationToken: formElement.querySelector('input[name="__RequestVerificationToken"]').value
+            };
+
+
             try {
-                // Gửi orderID trên URL và dùng phương thức POST
-                const response = await fetch(`/Card/capture-paypal-order?orderId=${data.orderID}`, {
-                    method: "POST"
-                    
+                const response = await fetch(`/GioHang/capture-paypal-order?orderId=${data.orderID}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // Token giờ đã được lấy thủ công, không cần gửi lại ở đây
+                        "RequestVerificationToken": checkoutData.__RequestVerificationToken
+                    },
+                    body: JSON.stringify(checkoutData)
                 });
 
                 if (!response.ok) {
-                    
-                    let errorMessage = `Lỗi từ server: ${response.status}`;
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.includes("application/json")) {
-                        const errorData = await response.json();
-                        errorMessage = errorData.message || JSON.stringify(errorData);
-                    } else {
-                        errorMessage = await response.text();
-                    }
+                    // Xử lý lỗi trả về từ server (ví dụ: lỗi validation)
+                    const errorText = await response.text();
+                    let errorMessage = `Lỗi từ server (${response.status})`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson && errorJson.errors) {
+                            errorMessage = "Vui lòng kiểm tra lại các thông tin sau:\n";
+                            for (const key in errorJson.errors) {
+                               errorMessage += `- ${errorJson.errors[key].join(', ')}\n`;
+                            }
+                        }
+                    } catch (e) { /* Bỏ qua nếu không phải JSON */ }
+
                     throw new Error(errorMessage);
                 }
 
-                // Nếu thành công, chuyển hướng
+                console.log("PayPal: Capture thành công, đang chuyển hướng...");
                 window.location.href = "/Card/PaymentSuccess";
 
             } catch (error) {
-                console.error("Lỗi khi xác nhận thanh toán PayPal:", error);
-                alert("Không thể xác nhận thanh toán. Vui lòng liên hệ hỗ trợ. Lỗi: " + error.message);
+                console.error("Lỗi trong onApprove khi gửi dữ liệu:", error);
+                alert("Không thể hoàn tất đơn hàng:\n" + error.message);
             }
         }
         }).render('#paypal-button-container');
+        });
     </script>
 }

@@ -14,4 +14,6 @@ public partial class MaGiamGium
     public int? SoLuong { get; set; }
 
     public DateTime? HetHan { get; set; }
+
+    public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 }

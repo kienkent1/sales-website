@@ -27,7 +27,7 @@ namespace project.ViewComponents
             {
                 var cartItemsFromDb = _db.GioHangs
                                          .AsNoTracking() 
-                                         .Where(gh => gh.MaKh == customerId);
+                                         .Where(gh => gh.MaKh == customerId && gh.DatHang != true);
 
                 cardModel = new CardModel
                 {

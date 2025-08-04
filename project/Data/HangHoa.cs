@@ -35,8 +35,6 @@ public partial class HangHoa
 
     public string? Slug { get; set; }
 
-    public virtual ICollection<BanBe> BanBes { get; set; } = new List<BanBe>();
-
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
 
     public virtual ICollection<GioHang> GioHangs { get; set; } = new List<GioHang>();
