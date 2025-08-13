@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using static project.Helpers.PaginationHelper;
 
 namespace project.ViewModels
 {
     public class ProductVM
     {
-
+        public PagedResult<HangHoaVM> PagedHangHoa { get; set; }
         public int MaHangHoa { get; set; }
 
         [MaxLength(100, ErrorMessage = "*Tên không được quá 50 ký tự")]

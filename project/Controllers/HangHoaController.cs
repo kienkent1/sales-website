@@ -9,6 +9,7 @@ using project.Data;
 using project.Helpers;
 using project.ViewModels;
 using System.Text.RegularExpressions;
+using static project.Helpers.PaginationHelper;
 
 namespace project.Controllers
 {
@@ -26,106 +27,74 @@ namespace project.Controllers
         }
         public async Task<IActionResult> Index(string? loai, string? brand, int pageNumber = 1)
         {
-
-            // 1. Định nghĩa số lượng item trên mỗi trang
             int pageSize = 12;
-            // 2. Bắt đầu xây dựng câu truy vấn (chưa thực thi)
-            IQueryable<HangHoa> hangHoas = db.HangHoas.AsQueryable();
 
+           
+            var pagedResult = await GetPaginatedHangHoaAsync(pageNumber, pageSize, loai, brand);
 
-            hangHoas = hangHoas.Where(hh => hh.IsDeleted != true);
+            
+            ViewData["CurrentLoai"] = loai;
+            ViewData["CurrentNCC"] = brand;
 
-            // 3. Áp dụng bộ lọc NẾU CÓ. Câu truy vấn vẫn chưa được thực thi.
+     
+            return View(pagedResult);
+        }
+        //GetPaginatedHangHoaAsync
+        private async Task<PagedResult<HangHoaVM>> GetPaginatedHangHoaAsync(
+    int pageNumber, int pageSize, string? loai = null, string? brand = null, string? query = null)
+        {
+            // 1. Bắt đầu với câu truy vấn IQueryable gốc
+            IQueryable<HangHoa> baseQuery = db.HangHoas
+                                              .Where(p => p.IsDeleted != true);
+
+            // 2. Áp dụng các bộ lọc dựa trên tham số
             if (!string.IsNullOrEmpty(loai))
             {
-                hangHoas = hangHoas.Where(hh => hh.MaLoaiNavigation.Slug == loai);
+                baseQuery = baseQuery.Where(p => p.MaLoaiNavigation.Slug == loai);
             }
             if (!string.IsNullOrEmpty(brand))
             {
-                hangHoas = hangHoas.Where(hh => hh.MaNccNavigation.Slug == brand);
+                baseQuery = baseQuery.Where(p => p.MaNccNavigation.Slug == brand);
             }
-            // 4. Đếm tổng số item SAU KHI đã lọc để tính số trang chính xác.
-            // Câu truy vấn COUNT(*) sẽ được gửi đến DB ở đây.
-            var totalItems = await hangHoas.CountAsync();
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var slugQuery = Helpers.Util.GenerateSlug(query);
+                baseQuery = baseQuery.Where(p => p.Slug.Contains(slugQuery) ||
+                                                 p.MaLoaiNavigation.Slug.Contains(slugQuery) ||
+                                                 p.MaNccNavigation.Slug.Contains(slugQuery));
+            }
 
-            // 5. Tính toán tổng số trang
-            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            // 3. CHIẾU (SELECT) sang ViewModel TRƯỚC KHI thực hiện ToListAsync()
+            var vmQuery = baseQuery.Select(p => new HangHoaVM
+            {
+                MaHangHoa = p.MaHh,
+                TenHangHoa = p.TenHh,
+                Slug = p.Slug,
+                HinhAnh = p.Hinh ?? "",
+                DonGia = p.DonGia ?? 0,
+                MoTaNgan = p.MoTaDonVi ?? "",
+                TenLoai = p.MaLoaiNavigation.TenLoai
+            });
 
-            var result = await hangHoas
-                .Where(hh => hh.IsDeleted != true)
-      .OrderBy(p => p.TenHh)
-      .Skip((pageNumber - 1) * pageSize)
-      .Take(pageSize)
-      .Select(p => new HangHoaVM
-      {
-          MaHangHoa = p.MaHh,
-          TenHangHoa = p.TenHh,
-          Slug = p.Slug,
-          HinhAnh = p.Hinh ?? "",
-          DonGia = p.DonGia ?? 0,
-          MoTaNgan = p.MoTaDonVi ?? "",
-          TenLoai = p.MaLoaiNavigation.TenLoai
-      })
-      .ToListAsync();
+            // 4. Sắp xếp kết quả
+            var orderedQuery = vmQuery.OrderBy(p => p.TenHangHoa);
 
-
-            ViewData["TotalPages"] = totalPages;
-            ViewData["CurrentPage"] = pageNumber;
-            ViewData["CurrentLoai"] = loai;
-            ViewData["CurrentNCC"] = brand;
-            return View(result);
+            // 5. Gọi hàm phân trang đã có trên IQueryable<HangHoaVM>
+            return await orderedQuery.ToPagedResultAsync(pageNumber, pageSize);
         }
+        //end GetPaginatedHangHoaAsync
 
         [Route("/CuaHang/TimKiem")]
         public async Task<IActionResult> Search(string query, int pageNumber = 1)
         {
             int pageSize = 12;
 
-            // 1. Bắt đầu với IQueryable cơ bản
-            IQueryable<HangHoa> hangHoasQuery = db.HangHoas.AsQueryable();
+            var pagedResult = await GetPaginatedHangHoaAsync(pageNumber, pageSize, query: query);
 
-            // 2. Áp dụng các bộ lọc để xây dựng câu truy vấn
-
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                query= Helpers.Util.GenerateSlug(query);
-                hangHoasQuery = hangHoasQuery.Where(hh => hh.Slug.Contains(query.ToLower()) || hh.MaLoaiNavigation.Slug.Contains(query.ToLower()) || hh.MaNccNavigation.Slug.Contains(query.ToLower()) );
-            }
-
-            // Luôn lọc ra các sản phẩm chưa bị xóa
-            hangHoasQuery = hangHoasQuery.Where(hh => hh.IsDeleted != true);
-
-            // Lấy tổng số lượng TRƯỚC khi phân trang
-            var totalItems = await hangHoasQuery.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-
-            // 3. Áp dụng sắp xếp và phân trang cho câu truy vấn
-            var paginatedQuery = hangHoasQuery
-               .OrderBy(p => p.TenHh)
-               .Skip((pageNumber - 1) * pageSize)
-               .Take(pageSize);
-
-            // 4. CHỈ BÂY GIỜ mới thực thi truy vấn và chuyển đổi sang ViewModel
-            //    `await` chỉ được sử dụng ở bước cuối cùng này.
-            var result = await paginatedQuery
-               .Select(p => new HangHoaVM
-               {
-                   MaHangHoa = p.MaHh,
-                   TenHangHoa = p.TenHh,
-                   HinhAnh = p.Hinh ?? "",
-                   DonGia = p.DonGia ?? 0,
-                   MoTaNgan = p.MoTaDonVi ?? "",
-                   TenLoai = p.MaLoaiNavigation.TenLoai
-               })
-               .ToListAsync();
-
-
-            ViewData["TotalPages"] = totalPages;
-            ViewData["CurrentPage"] = pageNumber;
             ViewData["CurrentQuery"] = query;
-            return View(result);
-        }
 
+            return View(pagedResult);
+        }
         //[Route("HangHoa /{id}")]
         public IActionResult Detail(string id)
         {
@@ -187,46 +156,46 @@ namespace project.Controllers
         }
 
         [Authorize(Roles = "1,2")]
-        public IActionResult QuanLySanPham(string? query)
+        public async Task< IActionResult> QuanLySanPham(string? query, int pageNumber = 1, int pageSize = 15)
         {
-            // 1. Lấy danh sách sản phẩm cho bảng 
-            List<HangHoa> danhSachHangHoa;
-            if (string.IsNullOrEmpty(query))
-            {
-                danhSachHangHoa = db.HangHoas
-                                 .Where(p => p.IsDeleted != true)
-                                .Include(p => p.MaLoaiNavigation)
-                                .Include(p => p.MaNccNavigation)
-                                .OrderByDescending(p => p.MaHh)
-                                .ToList();
-            }
-            else
+            // 1. BẮT ĐẦU VỚI IQueryable
+            IQueryable<HangHoa> baseQuery = db.HangHoas
+                                              .Include(p => p.MaLoaiNavigation)
+                                              .Include(p => p.MaNccNavigation)
+                                              .Where(p => p.IsDeleted != true);
+
+            // 2. ÁP DỤNG BỘ LỌC TÌM KIẾM (NẾU CÓ)
+            if (!string.IsNullOrEmpty(query))
             {
                 var HangHoaTimkiem = Helpers.Util.GenerateAlias(null, query);
-                danhSachHangHoa = db.HangHoas
-                                 .Where(p => p.IsDeleted != true && p.TenAlias != null && p.TenAlias.Contains(HangHoaTimkiem))
-                                .Include(p => p.MaLoaiNavigation)
-                                .Include(p => p.MaNccNavigation)
-                                .OrderByDescending(p => p.MaHh)
-                                .ToList();
-                if (danhSachHangHoa.Count == 0)
-                {
-                    TempData["Message"] = "Không tìm thấy sản phẩm nào với từ khóa tìm kiếm.";
-                }
-            }
-            ViewBag.CurrentQuery = query;
-            ViewBag.hangHoa = danhSachHangHoa;
 
-            // 2. Chuẩn bị dữ liệu phụ 
-            var countDeleted = db.HangHoas.IgnoreQueryFilters().Count(p => p.IsDeleted == true);
+                baseQuery = baseQuery.Where(p => p.TenAlias != null && p.TenAlias.Contains(HangHoaTimkiem));
+            }
+
+            // 3. SẮP XẾP KẾT QUẢ
+      
+            var orderedQuery = baseQuery.OrderByDescending(p => p.MaHh);
+
+            // 4. THỰC THI PHÂN TRANG
+      
+            var pagedResult = await orderedQuery.ToPagedResultAsync(pageNumber, pageSize);
+
+            // Kiểm tra nếu tìm kiếm không có kết quả
+            if (!string.IsNullOrEmpty(query) && pagedResult.TotalItems == 0)
+            {
+                TempData["Message"] = "Không tìm thấy sản phẩm nào với từ khóa tìm kiếm.";
+            }
+
+            // 5. TRUYỀN DỮ LIỆU SANG VIEW
+            ViewBag.PagedHangHoa = pagedResult;
+            ViewBag.CurrentQuery = query;
+
+            var countDeleted = await db.HangHoas.IgnoreQueryFilters().CountAsync(p => p.IsDeleted == true);
             ViewBag.CountDeleted = countDeleted;
 
-            // 3. Chuẩn bị DropDownList 
-            ViewBag.DanhSachLoai = new SelectList(db.Loais.Where(p => p.Deleted != true).ToList(), "MaLoai", "TenLoai");
-            ViewBag.DanhSachNcc = new SelectList(db.NhaCungCaps.ToList(), "MaNcc", "TenCongTy");
+            ViewBag.DanhSachLoai = new SelectList(await db.Loais.Where(p => p.Deleted != true).ToListAsync(), "MaLoai", "TenLoai");
+            ViewBag.DanhSachNcc = new SelectList(await db.NhaCungCaps.ToListAsync(), "MaNcc", "TenCongTy");
 
-            // 4. Luôn tạo một Model RỖNG cho form
-            // Vì View yêu cầu @model ProductVM, chúng ta phải cung cấp nó.
             var modelChoForm = new ProductVM();
 
             return View(modelChoForm);

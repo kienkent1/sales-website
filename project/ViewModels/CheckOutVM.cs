@@ -11,6 +11,7 @@ namespace project.ViewModels
         public string DiaChi { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+        [RegularExpression(@"^(\+84|0)(\d{9,15})$", ErrorMessage = "Số điện thoại không hợp lệ")]
         [DataType(DataType.PhoneNumber)]
         public string SoDienThoai { get; set; }
 

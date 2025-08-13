@@ -19,6 +19,8 @@ builder.Services.AddDbContext<Hshop2023Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("HShop"));
 });
 
+
+
 //automapper
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 //session
@@ -156,6 +158,7 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAuthentication();
+
 
 app.UseAuthorization();
 

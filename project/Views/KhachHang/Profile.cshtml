@@ -7,6 +7,16 @@
     <h1 class="mt-5">Trang cá nhân</h1>
     <h2>Chào <b>@Context.User.Identity.Name</b> !</h2>
 </div>
+@if (ViewBag.IsGGAccount == true)
+{
+    <div class="alert alert-warning mt-3" role="alert">
+        Tài khoản của bạn được đăng nhập bằng Google. Bạn không thể thay đổi mật khẩu tại đây.
+    </div>
+}
+else
+{
+  
+
 
 <div class="container mt-3">
     <div class="row justify-content-center ">
@@ -48,7 +58,7 @@
         </div>
     </div>
 </div>
-
+}
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");

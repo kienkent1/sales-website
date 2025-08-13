@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Razor.Language.Intermediate;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.RegularExpressions;
+
 
 namespace project.Helpers
 {
@@ -132,7 +135,9 @@ namespace project.Helpers
             return alias;
 
         }
-     
+        //pagination
+       
 
     }
+   
 }

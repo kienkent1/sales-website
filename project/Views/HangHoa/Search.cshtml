@@ -1,4 +1,6 @@
-﻿@model IEnumerable<project.ViewModels.HangHoaVM>
+﻿
+@using static project.Helpers.PaginationHelper
+@model PagedResult<project.ViewModels.HangHoaVM>
 
 @{
     ViewData["Title"] = "Search";
@@ -7,86 +9,15 @@
     var currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
     var currentQuery = ViewData["CurrentQuery"] as string;
 
-    // Logic để chỉ hiển thị một vài trang xung quanh trang hiện tại
-    int startPage = Math.Max(1, currentPage - 2);
-    int endPage = Math.Min(totalPages, currentPage + 2);
-
-    if (endPage - startPage < 4)
-    {
-        if (startPage == 1)
-        {
-            endPage = Math.Min(totalPages, startPage + 4);
-        }
-        else if (endPage == totalPages)
-        {
-            startPage = Math.Max(1, endPage - 4);
-        }
-    }
+    
 }
 
 
-@await Html.PartialAsync("ProductItem", Model)
+@await Html.PartialAsync("ProductItem", Model.Items)
 
 
-@if (totalPages > 1)
+@if (Model != null)
 {
-    <div class="col-12">
-        <nav>
-            <ul class="pagination d-flex justify-content-center mt-5">
-                @* Nút Previous *@
-                @if (currentPage > 1)
-                {
-                    <li class="page-item">
-                        <a class="page-link" asp-action="Search" asp-route-pageNumber="@(currentPage - 1)" asp-route-query="@currentQuery" aria-label="Previous">
-                            <span aria-hidden="true">«</span>
-                        </a>
-                    </li>
-                }
-
-                @* Hiển thị nút về trang đầu tiên nếu cần *@
-                @if (startPage > 1)
-                {
-                    <li class="page-item">
-                        <a class="page-link" asp-action="Search" asp-route-pageNumber="1" asp-route-query="@currentQuery">1</a>
-                    </li>
-                    @if (startPage > 2)
-                    {
-                        <li class="page-item disabled"><a class="page-link">...</a></li>
-                    }
-                }
-
-                @* Các nút số trang *@
-                @for (int i = startPage; i <= endPage; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Search" asp-route-pageNumber="@i" asp-route-query="@currentQuery">@i</a>
-                    </li>
-                }
-
-                @* Hiển thị nút về trang cuối cùng nếu cần *@
-                @if (endPage < totalPages)
-                {
-                    @if (endPage < totalPages - 1)
-                    {
-                        <li class="page-item disabled"><a class="page-link">...</a></li>
-                    }
-                    <li class="page-item">
-                        <a class="page-link" asp-action="Search" asp-route-pageNumber="@totalPages" asp-route-query="@currentQuery">@totalPages</a>
-                    </li>
-                }
-
-
-                @* Nút Next *@
-                @if (currentPage < totalPages)
-                {
-                    <li class="page-item">
-                        <a class="page-link" asp-action="Search" asp-route-pageNumber="@(currentPage + 1)" asp-route-query="@currentQuery" aria-label="Next">
-                            <span aria-hidden="true">»</span>
-                        </a>
-                    </li>
-                }
-            </ul>
-        </nav>
-    </div>
+    <partial name="Pagination" model="Model" />
 }
 

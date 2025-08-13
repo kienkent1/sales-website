@@ -1,4 +1,6 @@
-﻿@model IEnumerable<project.ViewModels.HangHoaVM>
+﻿
+@using static project.Helpers.PaginationHelper
+@model PagedResult<project.ViewModels.HangHoaVM>
 @{
     ViewData["Title"] = "Shop";
     Layout = "DSHangHoa"; 
@@ -17,14 +19,13 @@
 
 
         <div class="row g-4">
-            @await Html.PartialAsync("ProductItem", Model)
+            @await Html.PartialAsync("ProductItem", Model.Items)
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                @await Html.PartialAsync("pagination", Model)
-            </div>
-        </div>
+        @if (Model != null)
+        {
+            <partial name="Pagination" model="Model" />
+        }
 
     </div>
 </div>

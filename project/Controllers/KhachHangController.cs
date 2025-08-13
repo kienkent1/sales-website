@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.IdentityModel.Tokens;
+using NuGet.Packaging.Signing;
 using project.Data;
 using project.Helpers;
 using project.ViewModels;
@@ -34,7 +36,7 @@ namespace project.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> DangKy(RegisterVM model, IFormFile Hinh)
+        public async Task<IActionResult> DangKy(RegisterVM model, IFormFile? Hinh)
         {
             if (ModelState.IsValid)
             {
@@ -54,13 +56,13 @@ namespace project.Controllers
                     khachHang.HieuLuc = true;//su ly sau khi gui mail
                     khachHang.VaiTro = 0;
 
-                    if (Hinh != null)
+                    if (Hinh != null )
                     {
                         khachHang.Hinh =await _util.UploadImage(Hinh, "KhachHang");
                     }
                     db.Add(khachHang);
                     db.SaveChanges();
-                    return RedirectToAction("Index", "hangHoa");
+                    return RedirectToAction("Index", "Home");
                 }
                 catch (Exception )
                 {
@@ -104,8 +106,7 @@ namespace project.Controllers
                            
                             ModelState.AddModelError("Error", "Sai thông tin đăng nhập");
                         }
-                        else {
-                            var claims = new List<Claim>
+                        else {var claims = new List<Claim>
                             {
                                 new Claim(ClaimTypes.Email, khachHang.Email),
                                 new Claim(ClaimTypes.Name, khachHang.HoTen),
@@ -117,8 +118,9 @@ namespace project.Controllers
                             var claimIdentity = new ClaimsIdentity(claims,
                                 CookieAuthenticationDefaults.AuthenticationScheme);
                             var claimPrincipal = new ClaimsPrincipal(claimIdentity);
+                            
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal);
-                          
+                         
                             if (Url.IsLocalUrl(ReturnUrl))
                             {
                                 return Redirect(ReturnUrl);
@@ -249,6 +251,9 @@ namespace project.Controllers
         [Authorize]
         public IActionResult Profile()
         {
+            var customerId = HttpContext.User.Claims.SingleOrDefault(c => c.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            bool IsGGAccount = customerId.StartsWith("GG_");
+            ViewBag.IsGGAccount = IsGGAccount;
             return View();
         }
 
@@ -369,6 +374,7 @@ namespace project.Controllers
 
                 ngdung.Deleted = true; 
                 ngdung.DeletedAt = DateTime.Now; 
+                ngdung.HieuLuc = false; 
 
                 db.KhachHangs.Update(ngdung);
                 await db.SaveChangesAsync();
@@ -493,6 +499,38 @@ namespace project.Controllers
 
             return View();
 
+        }
+
+        [Authorize(Roles = "2")]
+        [HttpPost("~/KhachHang/RestoreUser")]
+        public async Task<IActionResult> RestoreUser([FromBody] List<string> id)
+        {
+            try { 
+           
+
+                if (id == null || !id.Any())
+                {
+                    return BadRequest(new { success = false, message = "Vui lòng cung cấp danh sách ID sản phẩm để hoàn tác." });
+                }
+
+
+                var users = await db.KhachHangs
+                                                .Where(p => id.Contains(p.MaKh))
+                                                .ExecuteUpdateAsync(p => p
+                                                    .SetProperty(h => h.Deleted, false)
+                                                    .SetProperty(h => h.DeletedAt, (DateTime?)null)
+                                                .SetProperty(h=>h.HieuLuc, true));
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Đã hoàn tác thành công {users} sản phẩm."
+                });
+            }
+            catch (Exception ex)
+            {
+                 StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi khôi phục tài khoản." });
+              return  RedirectToAction(nameof(GabageUsers));
+            }
         }
     } 
 }

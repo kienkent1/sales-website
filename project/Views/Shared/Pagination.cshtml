@@ -1,0 +1,109 @@
+﻿@using project.Helpers
+@using static project.Helpers.PaginationHelper
+
+@model IPagedResult
+
+@{
+    if (Model == null || Model.TotalPages <= 1)
+    {
+        // Không hiển thị gì nếu không có gì để phân trang
+        return;
+    }
+
+    var totalPages = Model.TotalPages;
+    var currentPage = Model.PageNumber;
+
+    // Tính toán các trang sẽ hiển thị (ví dụ: hiển thị 5 nút trang)
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    if (endPage - startPage < 4)
+    {
+        if (startPage == 1) endPage = Math.Min(totalPages, 5);
+        else if (endPage == totalPages) startPage = Math.Max(1, totalPages - 4);
+    }
+
+    var routeData = new Dictionary<string, string>();
+    foreach (var key in ViewContext.HttpContext.Request.Query.Keys)
+    {
+        // Loại trừ pageNumber cũ để tránh bị trùng lặp
+        if (key.ToLower() != "pagenumber")
+        {
+            routeData[key] = ViewContext.HttpContext.Request.Query[key];
+        }
+    }
+}
+
+
+<div class="col-12">
+    <nav>
+        <ul class="pagination d-flex justify-content-center mt-5">
+            @* Nút Previous *@
+            @if (currentPage > 1)
+            {
+                <li class="page-item">
+                    @{
+                        routeData["pageNumber"] = (currentPage - 1).ToString();
+                    }
+                    <a class="page-link" asp-all-route-data="routeData" aria-label="Previous">
+                        <span aria-hidden="true">«</span>
+                    </a>
+                </li>
+            }
+
+            @* Nút về trang đầu tiên *@
+            @if (startPage > 1)
+            {
+                <li class="page-item">
+                    @{
+                        routeData["pageNumber"] = "1";
+                    }
+                    <a class="page-link" asp-all-route-data="routeData">1</a>
+                </li>
+                @if (startPage > 2)
+                {
+                    <li class="page-item disabled"><a class="page-link">...</a></li>
+                }
+            }
+
+            @* Các nút số trang *@
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    @{
+                        routeData["pageNumber"] = i.ToString();
+                    }
+                    <a class="page-link" asp-all-route-data="routeData">@i</a>
+                </li>
+            }
+
+            @* Nút về trang cuối cùng *@
+            @if (endPage < totalPages)
+            {
+                @if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled"><a class="page-link">...</a></li>
+                }
+                <li class="page-item">
+                    @{
+                        routeData["pageNumber"] = totalPages.ToString();
+                    }
+                    <a class="page-link" asp-all-route-data="routeData">@totalPages</a>
+                </li>
+            }
+
+            @* Nút Next *@
+            @if (currentPage < totalPages)
+            {
+                <li class="page-item">
+                    @{
+                        routeData["pageNumber"] = (currentPage + 1).ToString();
+                    }
+                    <a class="page-link" asp-all-route-data="routeData" aria-label="Next">
+                        <span aria-hidden="true">»</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
